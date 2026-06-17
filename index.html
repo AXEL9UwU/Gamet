@@ -31,17 +31,24 @@
         .project-actions button { width: auto; margin: 0; padding: 8px 15px; font-size: 13px; border-radius: 4px; }
 
         /* COMUNIDAD (Grid estilo Roblox/Scratch) */
-        .hub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; width: 100%; margin-top: 15px; max-height: 450px; overflow-y: auto; padding-right: 10px;}
+        .hub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; width: 100%; margin-top: 15px; max-height: 380px; overflow-y: auto; padding-right: 10px;}
         .hub-card { background: #000; border: 1px solid #333; border-radius: 8px; display: flex; flex-direction: column; overflow: hidden; transition: 0.2s; }
         .hub-card:hover { transform: translateY(-5px); border-color: var(--accent2); box-shadow: 0 10px 25px rgba(0,229,255,0.15); }
         .hub-card .thumb { height: 120px; background: #111; display: flex; justify-content: center; align-items: center; font-size: 40px; border-bottom: 2px solid #333; }
         .hub-card .info { padding: 15px; display: flex; flex-direction: column; flex-grow: 1; }
         .hub-card .info h4 { margin: 0 0 5px 0; font-size: 15px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .hub-card .info p.author { margin: 0 0 10px 0; font-size: 12px; color: var(--accent2); }
+        .hub-card .info .stats-line { font-size: 11px; color: #888; margin-bottom: 12px; display: flex; gap: 10px; align-items: center; }
         .hub-card .info .badge { align-self: flex-start; padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; margin-bottom: 15px; }
         .badge.template { background: rgba(0, 229, 255, 0.2); color: var(--accent2); }
         .badge.game { background: rgba(0, 204, 102, 0.2); color: #00cc66; }
         .hub-card button { margin-top: auto; padding: 10px; border-radius: 6px; font-weight: bold; font-size: 13px; border: none; }
+
+        /* Pestañas secundarias de Comunidad */
+        .com-subtabs { display: flex; gap: 8px; margin: 15px 0 10px 0; border-bottom: 1px solid #222; padding-bottom: 12px; width: 100%; overflow-x: auto; }
+        .com-subtab-btn { background: transparent; color: #888; border: none; padding: 6px 12px; font-size: 12px; cursor: pointer; border-radius: 4px; font-weight: bold; transition: 0.2s; white-space: nowrap; border: 1px solid #222; }
+        .com-subtab-btn:hover { color: #fff; border-color: #444; }
+        .com-subtab-btn.active { background: #1f1f2e; color: var(--accent2); border-color: var(--accent2); }
 
         /* PLAY MODAL (Para ejecutar juegos de la comunidad) */
         #play-modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.9); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
@@ -50,6 +57,13 @@
         .play-header button { background: #ff3333; color: white; padding: 8px 20px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .play-header button:hover { background: #ff0055; transform: scale(1.05); }
         #play-iframe { width: 800px; height: 480px; border: 2px solid #444; border-radius: 8px; background: #000; box-shadow: 0 20px 60px rgba(0,0,0,0.7); }
+
+        /* MODAL FORMULARIO COMUNIDAD */
+        #community-form-modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(5,5,8,0.9); backdrop-filter: blur(8px); z-index: 12000; display: none; align-items: center; justify-content: center; }
+        #community-form-modal input[type="text"] { width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #444; background: #000; color: #fff; margin-bottom: 15px; outline: none; }
+
+        /* MODAL CODIGO GENERADO COMUNIDAD */
+        #community-export-modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(5,5,8,0.9); backdrop-filter: blur(8px); z-index: 12000; display: none; align-items: center; justify-content: center; }
 
         /* Workspace View */
         #workspace-view { display: none; flex-direction: column; height: 100vh; }
@@ -135,13 +149,65 @@
 </head>
 <body>
 
+    <!-- SISTEMA DE NOTIFICACIONES Y DE DIÁLOGOS SÚPER PRO -->
+    <div id="toast-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 11000; display: flex; flex-direction: column; gap: 10px; pointer-events: none;"></div>
+    
+    <div id="custom-modal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(5,5,8,0.85); backdrop-filter: blur(8px); z-index: 11001; display: none; align-items: center; justify-content: center; transition: 0.3s;">
+        <div style="background: #121218; border: 2px solid #00e5ff; border-radius: 12px; width: 90%; max-width: 420px; padding: 25px; box-shadow: 0 0 40px rgba(0,229,255,0.25); text-align: center; transform: scale(0.9); transition: transform 0.2s;">
+            <div id="modal-icon" style="font-size: 40px; margin-bottom: 15px; color: #ff0055;">⚠️</div>
+            <h3 id="modal-title" style="color: #00e5ff; font-size: 20px; margin: 0 0 12px 0; border: none; padding: 0; text-transform: uppercase; letter-spacing: 1px;">Alerta</h3>
+            <p id="modal-message" style="color: #e0e0e0; font-size: 14px; margin: 0 0 25px 0; line-height: 1.5;"></p>
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <button id="modal-btn-cancel" style="width: auto; background: #222; border: 1px solid #444; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; color: #fff;">Cancelar</button>
+                <button id="modal-btn-ok" style="width: auto; background: linear-gradient(90deg, #ff0055, #00e5ff); border: none; padding: 10px 25px; border-radius: 6px; cursor: pointer; font-weight: bold; color: #000; text-shadow: 0 0 1px #fff;">Aceptar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL PARA JUGAR JUEGOS DE LA COMUNIDAD (TIPO ROBLOX) -->
     <div id="play-modal">
         <div class="play-header">
             <h2 id="play-modal-title">Jugando...</h2>
             <button onclick="closePlayModal()">CERRAR JUEGO</button>
         </div>
-        <iframe id="play-iframe" sandbox="allow-scripts allow-same-origin"></iframe>
+        <iframe id="play-iframe" sandbox="allow-scripts allow-same-origin allow-pointer-lock"></iframe>
+    </div>
+
+    <!-- MODAL FORMULARIO COMUNIDAD -->
+    <div id="community-form-modal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(5,5,8,0.9); backdrop-filter: blur(8px); z-index: 12000; display: none; align-items: center; justify-content: center;">
+        <div style="background: #121218; border: 2px solid #00cc66; border-radius: 12px; width: 90%; max-width: 400px; padding: 25px; box-shadow: 0 0 40px rgba(0,204,102,0.25);">
+            <h3 style="color: #00cc66; margin-top: 0; font-size: 20px;">🌐 Publicar en Comunidad</h3>
+            <p style="color: #aaa; font-size: 13px; margin-bottom: 20px;">Rellena los datos para generar el código de tu juego.</p>
+            
+            <label style="font-size: 12px; color: #fff; display: block; text-align: left; margin-bottom: 5px;">Tu nombre/alias:</label>
+            <input type="text" id="com-author" placeholder="@creador" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #444; background: #000; color: #fff; margin-bottom: 15px; outline: none;">
+            
+            <label style="font-size: 12px; color: #fff; display: block; text-align: left; margin-bottom: 5px;">Breve descripción:</label>
+            <input type="text" id="com-desc" placeholder="¡Intenta escapar de mi nivel!" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #444; background: #000; color: #fff; margin-bottom: 15px; outline: none;">
+            
+            <label style="display:flex; align-items:center; gap:8px; font-size: 13px; color: #fff; cursor: pointer; margin-bottom: 20px;">
+                <input type="checkbox" id="com-template" style="width: auto; margin:0;">
+                Es una Plantilla (Permitir a otros remezclar)
+            </label>
+            
+            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button onclick="document.getElementById('community-form-modal').style.display='none'" style="background: #222; border: 1px solid #444; color: #fff; padding: 8px 15px; border-radius: 4px; cursor: pointer;">Cancelar</button>
+                <button onclick="generateCommunityCode()" style="background: #00cc66; border: none; font-weight: bold; color: #000; padding: 8px 15px; border-radius: 4px; cursor: pointer;">Generar Código</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CODIGO GENERADO COMUNIDAD -->
+    <div id="community-export-modal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(5,5,8,0.9); backdrop-filter: blur(8px); z-index: 12000; display: none; align-items: center; justify-content: center;">
+        <div style="background: #121218; border: 2px solid #00cc66; border-radius: 12px; width: 90%; max-width: 600px; padding: 25px; box-shadow: 0 0 40px rgba(0,204,102,0.25);">
+            <h3 style="color: #00cc66; margin-top: 0; text-align: left;">Código Listo</h3>
+            <p style="color: #aaa; font-size: 13px; text-align: left;">Copia este código y pégalo añadiéndolo en el array <code>COMMUNITY_DEMOS</code> del código fuente.</p>
+            <textarea id="community-export-text" style="width: 100%; height: 250px; background: #000; color: #00e5ff; font-family: monospace; font-size: 11px; border: 1px solid #444; border-radius: 6px; padding: 10px; resize: none; margin-bottom: 10px;" readonly></textarea>
+            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button onclick="document.getElementById('community-export-modal').style.display='none'" style="background: #222; border: 1px solid #444; color: #fff; padding: 8px 15px; border-radius: 4px; cursor: pointer;">Cerrar</button>
+                <button onclick="copyCommunityCode()" style="background: #00cc66; border: none; font-weight: bold; color: #000; padding: 8px 15px; border-radius: 4px; cursor: pointer;">📋 Copiar Código</button>
+            </div>
+        </div>
     </div>
 
     <!-- 0. PANTALLA INICIAL (HUB) -->
@@ -185,8 +251,18 @@
         <div class="hub-container" id="hub-community" style="max-width: 900px; width:100%; padding:20px;">
             <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #333; padding-bottom:10px;">
                 <h3 style="color:#00e5ff; margin:0;">🕹️ Juegos de la Comunidad</h3>
-                <p style="color:#aaa; font-size:13px; margin:0;">Juega al instante o remezcla plantillas.</p>
+                <p style="color:#aaa; font-size:13px; margin:0;">Filtros y ordenación inteligentes.</p>
             </div>
+            <!-- Nueva barra de pestañas para la comunidad con algoritmo de clasificación -->
+            <div class="com-subtabs" id="com-subtabs-container">
+                <button class="com-subtab-btn active" onclick="switchCommunityCategory('todos')">🌐 Todos</button>
+                <button class="com-subtab-btn" onclick="switchCommunityCategory('destacados')">🔥 Destacados</button>
+                <button class="com-subtab-btn" onclick="switchCommunityCategory('prometedores')">📈 Prometedores</button>
+                <button class="com-subtab-btn" onclick="switchCommunityCategory('picks')">🌟 Selección Gamet Team</button>
+            </div>
+            <!-- Buscador en tiempo real -->
+            <input type="text" id="com-search" placeholder="🔍 Buscar juegos o usuarios..." oninput="loadCommunityDemos()" style="width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 6px; background: #000; border: 1px solid #333; color: #fff; font-size: 14px; outline: none;">
+            
             <div class="hub-grid" id="hub-community-list"></div>
         </div>
     </div>
@@ -246,4 +322,2496 @@
                     <option value="2">2x2 píxeles</option>
                     <option value="3">3x3 píxeles (Centro)</option>
                 </select>
-                <label style="display:flex; align-items:center; 
+                <label style="display:flex; align-items:center; gap:5px; font-size:12px; margin-top:5px; cursor:pointer;">
+                    <input type="checkbox" id="onion-skin-chk" onchange="drawOnionSkin()" style="width:auto; margin:0;">
+                    Papel de Cebolla (Onion Skin)
+                </label>
+                <hr style="border-color:#333; margin:15px 0;">
+                <h3>Galería Global</h3>
+                <div id="global-sprites" class="sprite-gallery"></div>
+                <button onclick="deleteSelectedSprite()" style="background:#ff3333; margin-top:5px; font-size:12px;">Borrar Sprite Seleccionado</button>
+            </div>
+            <div class="main-area">
+                <div id="sprite-editor"></div>
+            </div>
+        </div>
+
+        <!-- 3. CANVAS UI MAKER -->
+        <div id="tab-ui" class="view">
+            <div class="sidebar">
+                <h3>Nueva Interfaz</h3>
+                <input type="text" id="ui-create-name" placeholder="Nombre (ej: MiArma, HUD)">
+                <button onclick="createUI()" style="background:var(--accent2); color:#000;">Crear Interfaz</button>
+                <hr style="border-color:#333;">
+                <h3>Editor de Capas:</h3>
+                <select id="ui-select" onchange="loadUIEditor()"><option value="">-- Selecciona Interfaz --</option></select>
+                
+                <div id="ui-tools" style="display:none; background:#111; padding:10px; border-radius:6px; border:1px solid #444;">
+                    <select id="ui-elem-type" onchange="toggleUIElemInput()">
+                        <option value="sprite">Añadir Sprite (Imagen)</option>
+                        <option value="text">Añadir Texto / Variables</option>
+                    </select>
+                    <div id="ui-elem-text-container" style="display:none;">
+                        <input type="text" id="ui-elem-text" placeholder="Ej: Vidas: {HP}">
+                        <p style="font-size:10px; color:#aaa; margin:2px 0 8px;">Variables: {HP}, {SCORE}, {AMMO}, o {MiVar}.</p>
+                    </div>
+                    <div id="ui-elem-sprite-container">
+                        <label style="font-size:11px; color:#aaa;">Selecciona de Galería:</label>
+                        <div id="ui-sprite-select" class="sprite-gallery"></div>
+                    </div>
+                    
+                    <div style="display:flex; gap:5px; margin-top:10px;">
+                        <div><label style="font-size:11px;">Pos X (%)</label><input type="number" id="ui-pos-x" value="50"></div>
+                        <div><label style="font-size:11px;">Pos Y (%)</label><input type="number" id="ui-pos-y" value="50"></div>
+                        <div><label style="font-size:11px;">Escala</label><input type="number" id="ui-scale" value="5" min="1" step="0.5"></div>
+                    </div>
+                    <button onclick="addUIElement()" style="background:var(--c-looks); margin-top:10px;">➕ Pegar en Pantalla</button>
+                </div>
+            </div>
+            <div class="main-area">
+                <h3 style="margin:0;">Lienzo de Previsualización</h3>
+                <div id="ui-preview-container"></div>
+                <div id="ui-element-list" style="margin-top:10px;"></div>
+            </div>
+        </div>
+
+        <!-- 4. LÓGICA & CÓDIGO -->
+        <div id="tab-chars" class="view">
+            <div class="sidebar">
+                <div style="background:#111; padding:10px; border-radius:6px; border:1px solid #333;">
+                    <h3>1. Crear Entidad</h3>
+                    <input type="text" id="obj-name" placeholder="Nombre (ej: Monstruo)">
+                    <select id="obj-physics">
+                        <option value="trigger">Atravesable / Enemigo (Dinámico)</option>
+                        <option value="solid">Sólido (Muro Estático)</option>
+                    </select>
+                    <label style="font-size:11px; color:#aaa;">Sprite (Textura):</label>
+                    <div id="logic-sprite-select" class="sprite-gallery" style="background:#000; padding:5px; border:1px solid #444; min-height:40px;"></div>
+                    <button onclick="createEntity()" style="background:var(--accent2); color:#000; margin-top:5px;">➕ Guardar Nueva Entidad</button>
+                </div>
+
+                <div style="background:#111; padding:10px; border-radius:6px; border:1px solid #333; margin-top:15px;">
+                    <h3>2. Añadir Evento</h3>
+                    <select id="new-event-type" onchange="toggleEventParamInput()">
+                        <option value="start">🏁 Al iniciar Nivel</option>
+                        <option value="update">🟢 Por siempre (Bucle)</option>
+                        <option value="click">🖱️ Al hacer Clic</option>
+                        <option value="hit">🎯 Al recibir Hitscan</option>
+                        <option value="collide">🟡 Al tocar al Jugador</option>
+                        <option value="keypress">⌨️ Al pulsar Tecla</option>
+                        <option value="broadcast">📢 Al recibir Mensaje</option>
+                    </select>
+                    <div id="event-param-container" style="display:none;">
+                        <input type="text" id="new-event-param" placeholder="Parámetro (Tecla o Mensaje)">
+                    </div>
+                    <button onclick="addEventTrigger()" style="background:var(--accent2); color:#000; margin-top:5px;">➕ Crear Evento</button>
+                </div>
+
+                <h3 style="margin-top:15px;">3. Cajón de Bloques</h3>
+                <div class="block-palette-area" id="block-palette">
+                    <div style="font-size:10px; color:#888; margin-bottom:5px;">JUGADOR Y COMBATE</div>
+                    <div class="visual-block b-player" draggable="true" ondragstart="dragS(event, 'shoot_ray')"><span>🔫 Disparar Rayo Hitscan</span></div>
+                    <div class="visual-block b-player" draggable="true" ondragstart="dragS(event, 'give_ammo')"><span>Dar Munición:</span> <input type="number" value="10"></div>
+                    <div class="visual-block b-player" draggable="true" ondragstart="dragS(event, 'heal_hp')"><span>Curar Vida:</span> <input type="number" value="20"></div>
+                    
+                    <div style="font-size:10px; color:#888; margin:10px 0 5px 0;">VARIABLES (Globales)</div>
+                    <div class="visual-block b-var" draggable="true" ondragstart="dragS(event, 'add_score')"><span>Sumar Puntos (Score):</span> <input type="number" value="100"></div>
+                    <div class="visual-block b-var" draggable="true" ondragstart="dragS(event, 'set_var')"><span>Fijar Var (Nom,Val):</span> <input type="text" value="Oro,10"></div>
+                    <div class="visual-block b-var" draggable="true" ondragstart="dragS(event, 'add_var')"><span>Sumar Var (Nom,Val):</span> <input type="text" value="Oro,1"></div>
+                    <div class="visual-block b-var" draggable="true" ondragstart="dragS(event, 'multiply_var')"><span>Multiplicar Var (Nom,Val):</span> <input type="text" value="Oro,2"></div>
+                    <div class="visual-block b-var" draggable="true" ondragstart="dragS(event, 'toggle_var')"><span>Alternar Var (0/1):</span> <input type="text" value="Linterna"></div>
+                    
+                    <div style="font-size:10px; color:#888; margin:10px 0 5px 0;">MOVIMIENTO E IA</div>
+                    <div class="visual-block b-move" draggable="true" ondragstart="dragS(event, 'teleport')"><span>Teleportar a (X,Y):</span> <input type="text" value="2,2"></div>
+                    <div class="visual-block b-move" draggable="true" ondragstart="dragS(event, 'bounce')"><span>Rebotar (Invertir Dir)</span></div>
+                    <div class="visual-block b-move" draggable="true" ondragstart="dragS(event, 'chase')"><span>IA: Perseguir al Jugador</span></div>
+                    <div class="visual-block b-move" draggable="true" ondragstart="dragS(event, 'chase_shoot')"><span>IA: Enemigo Dispara Rayo</span></div>
+                    <div class="visual-block b-move" draggable="true" ondragstart="dragS(event, 'move_rand')"><span>IA: Mover Aleatorio</span></div>
+                    <div class="visual-block b-move" draggable="true" ondragstart="dragS(event, 'move_fw')"><span>Mover Hacia Adelante</span></div>
+                    <div class="visual-block b-move" draggable="true" ondragstart="dragS(event, 'move_x')"><span>Mover X (Vel):</span> <input type="number" value="1" step="0.5"></div>
+                    <div class="visual-block b-move" draggable="true" ondragstart="dragS(event, 'move_y')"><span>Mover Y (Vel):</span> <input type="number" value="1" step="0.5"></div>
+                    
+                    <div style="font-size:10px; color:#888; margin:10px 0 5px 0;">SISTEMAS Y EVENTOS</div>
+                    <div class="visual-block b-system" draggable="true" ondragstart="dragS(event, 'set_block')"><span>🧱 Cambiar Muro (X,Y,ID):</span> <input type="text" value="5,5,0" style="width:70px"></div>
+                    <div class="visual-block b-system" draggable="true" ondragstart="dragS(event, 'send_msg')"><span>📢 Enviar Mensaje:</span> <input type="text" value="LuzOn"></div>
+                    <div class="visual-block b-system" draggable="true" ondragstart="dragS(event, 'if_var_msg')"><span>❓ Si Var [Nom,op,Val] -> Msg:</span> <input type="text" value="Linterna,==,1,LuzOn" style="width:110px;"></div>
+                    <div class="visual-block b-system" draggable="true" ondragstart="dragS(event, 'load_level')"><span>🚪 Cargar Nivel:</span> <input type="text" value="Nivel 2"></div>
+                    <div class="visual-block b-system" draggable="true" ondragstart="dragS(event, 'set_speed')"><span>Fijar Velocidad (B:1):</span> <input type="number" value="1.5" step="0.1"></div>
+                    <div class="visual-block b-system" draggable="true" ondragstart="dragS(event, 'set_fog')"><span>Fijar Niebla (Dist):</span> <input type="number" value="15"></div>
+                    <div class="visual-block b-system" draggable="true" ondragstart="dragS(event, 'wait')"><span>⏳ Esperar (seg):</span> <input type="number" value="1" step="0.1"></div>
+                    <div class="visual-block b-system" draggable="true" ondragstart="dragS(event, 'chance_stop')"><span>🎲 50% Detener Código</span></div>
+                    <div class="visual-block b-system" draggable="true" ondragstart="dragS(event, 'stop_script')"><span>🛑 Detener Código Aquí</span></div>
+                    
+                    <div style="font-size:10px; color:#888; margin:10px 0 5px 0;">VISUALES Y AUDIO</div>
+                    <div class="visual-block b-look" draggable="true" ondragstart="dragS(event, 'show_ui')"><span>Mostrar UI (Nombre):</span> <input type="text" value="MiHUD" style="width:65px"></div>
+                    <div class="visual-block b-look" draggable="true" ondragstart="dragS(event, 'hide_ui')"><span>Ocultar Todas UIs</span></div>
+                    <div class="visual-block b-look" draggable="true" ondragstart="dragS(event, 'set_sprite')"><span>Cambiar Sprite (ID):</span> <input type="number" value="1"></div>
+                    <div class="visual-block b-look" draggable="true" ondragstart="dragS(event, 'sound')"><span>Sonido (pew/hurt/coin):</span> <input type="text" value="pew"></div>
+                    <div class="visual-block b-look" draggable="true" ondragstart="dragS(event, 'shake')"><span>Temblor de Pantalla</span></div>
+                    <div class="visual-block b-look" draggable="true" ondragstart="dragS(event, 'set_sky')"><span>Color Cielo (Hex):</span> <input type="color" value="#111111" style="height:22px; padding:0;"></div>
+                    <div class="visual-block b-look" draggable="true" ondragstart="dragS(event, 'set_floor')"><span>Color Suelo (Hex):</span> <input type="color" value="#050505" style="height:22px; padding:0;"></div>
+                    
+                    <div style="font-size:10px; color:#888; margin:10px 0 5px 0;">COMBATE Y UTILIDADES</div>
+                    <div class="visual-block b-system" draggable="true" ondragstart="dragS(event, 'damage')"><span>Dañar al Jugador:</span> <input type="number" value="10"></div>
+                    <div class="visual-block b-system" draggable="true" ondragstart="dragS(event, 'spawn')"><span>Invocar Entidad (ID Num):</span> <input type="number" value="3"></div>
+                    <div class="visual-block b-combat" draggable="true" ondragstart="dragS(event, 'destroy')"><span>Morir / Destruir Objeto</span></div>
+                    <div class="visual-block b-combat" draggable="true" ondragstart="dragS(event, 'win')"><span>Ganar el Nivel</span></div>
+                    <div class="visual-block b-system" draggable="true" ondragstart="dragS(event, 'print')"><span>Log:</span> <input type="text" value="Texto" style="width:70px"></div>
+                </div>
+            </div>
+            
+            <div class="main-area" style="align-items: center;">
+                <div style="width: 100%; max-width: 650px;">
+                    <h3>4. Programar Lógica (Lienzo Workspace)</h3>
+                    <select id="edit-obj-select" onchange="loadLogic()" style="background:#222; border-color:var(--accent2); font-weight:bold; color:#fff; font-size:16px; padding:10px; margin-bottom: 20px;"></select>
+                    
+                    <div id="workspace" style="display:none; width: 100%;">
+                        <!-- Los contenedores de eventos se cargarán aquí -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. AJUSTES -->
+        <div id="tab-settings" class="view">
+            <div class="sidebar">
+                <h3>Ajustes del Motor</h3>
+                <p style="font-size:12px; color:#aaa;">Cambia los parámetros base del motor. Estos ajustes se exportan junto a tu juego.</p>
+                
+                <label style="font-size:12px; font-weight:bold; color:var(--accent2); display:block; margin-top:10px;">🕹️ Controles Jugador:</label>
+                <label style="font-size:12px;">Velocidad Base:</label>
+                <input type="number" id="cfg-pspeed" value="0.1" step="0.05" onchange="updateEngineConfig()">
+                <label style="font-size:12px;">Sensibilidad Cámara (3D Ratón):</label>
+                <input type="number" id="cfg-pturn" value="0.005" step="0.001" onchange="updateEngineConfig()">
+                
+                <label style="font-size:12px; font-weight:bold; color:var(--accent2); display:block; margin-top:10px;">🌫️ Entorno 3D:</label>
+                <label style="font-size:12px;">Distancia de Niebla (Fog):</label>
+                <input type="number" id="cfg-fog" value="15" min="2" max="50" onchange="updateEngineConfig()">
+                <div style="display:flex; gap:10px; margin-top:5px;">
+                    <div style="flex:1;"><label style="font-size:12px;">Color Cielo</label><input type="color" id="cfg-sky" value="#111111" onchange="updateEngineConfig()"></div>
+                    <div style="flex:1;"><label style="font-size:12px;">Color Suelo</label><input type="color" id="cfg-floor" value="#050505" onchange="updateEngineConfig()"></div>
+                </div>
+            </div>
+            <div class="main-area" style="justify-content: center; align-items: center; background: #000;">
+                <div style="text-align:center; color:#aaa; font-size:18px;">Personaliza el movimiento y la niebla desde el panel izquierdo.</div>
+            </div>
+        </div>
+
+        <!-- 6. PUBLICAR / GUARDAR -->
+        <div id="tab-save" class="view">
+            <div class="sidebar">
+                <h3>Guardar Proyecto</h3>
+                <button onclick="saveProjectToHub()" class="btn-green" style="height: 40px;">💾 Guardar Cambios</button>
+                <button onclick="exportProjectJSON()" style="height: 40px; margin-bottom: 20px;">⬇️ Descargar Código (.json)</button>
+            </div>
+            <div class="main-area" style="justify-content: center; align-items: center; background: #000; flex-direction: row; flex-wrap: wrap; gap: 20px; padding: 40px;">
+                <div style="background: #111; padding: 40px; border: 2px solid var(--accent2); border-radius: 12px; text-align: center; max-width: 400px; flex: 1; box-shadow: 0 0 30px rgba(0,229,255,0.15);">
+                    <h1 style="color: var(--accent2); margin-top:0; font-size: 24px;">🚀 JUEGO PLAYABLE</h1>
+                    <p style="color: #aaa; font-size: 13px; line-height: 1.5;">Compila tu nivel, tus bloques Scratch y tus sprites en un único archivo <b>.html</b> ultra-optimizado.</p>
+                    <p style="color: #888; font-size: 11px; margin-top: 10px;">¡Pégalo directamente en la herramienta <b>"Insertar código" de Google Sites</b> o tu NAS!</p>
+                    <button onclick="exportPlayableHTML()" style="background: var(--accent); color: #fff; font-size: 14px; height: 50px; margin-top: 20px; box-shadow: 0 0 20px rgba(255, 0, 85, 0.4);">📦 EXPORTAR HTML</button>
+                </div>
+
+                <div style="background: #111; padding: 40px; border: 2px solid #00cc66; border-radius: 12px; text-align: center; max-width: 400px; flex: 1; box-shadow: 0 0 30px rgba(0,204,102,0.15);">
+                    <h1 style="color: #00cc66; margin-top:0; font-size: 24px;">🌐 COMUNIDAD</h1>
+                    <p style="color: #aaa; font-size: 13px; line-height: 1.5;">Genera el objeto JSON exacto para añadirlo a la lista de juegos de la comunidad en el Hub.</p>
+                    <p style="color: #888; font-size: 11px; margin-top: 10px;">Para fase de pruebas (Test) local sin base de datos en NAS todavía.</p>
+                    <button onclick="document.getElementById('community-form-modal').style.display='flex';" style="background: #00cc66; color: #000; font-size: 14px; height: 50px; margin-top: 20px; box-shadow: 0 0 20px rgba(0, 204, 102, 0.4);">🔗 GENERAR CÓDIGO</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. JUGAR -->
+        <div id="tab-play" class="view">
+            <div class="sidebar">
+                <h3>Controles de Juego</h3>
+                <p style="font-size:12px; color:#aaa;">- WASD: Moverse / Strafe (3D).<br>- Flechas Izq/Der o Q/E: Girar cámara.<br>- Ratón: Arrastrar para mirar en 3D (¡Ideal para iframes!).<br>- Bloqueo de Cursor: Clic en pantalla.<br>- Clic Izquierdo: Acción / Disparar.</p>
+                <label>Cámara / Motor:</label>
+                <select id="engine-cam" style="font-size: 16px; font-weight:bold; color:var(--accent2);">
+                    <option value="raycaster">3D Raycaster (FPS)</option>
+                    <option value="topdown">2D Vista Cenital</option>
+                    <option value="sideview">2D Plataformas (Scroll)</option>
+                </select>
+                <button id="btn-play" onclick="togglePlay()" style="background:var(--accent2); color:#000; height: 60px; font-size: 18px; margin-top:20px; box-shadow: 0 0 15px rgba(0,229,255,0.4);">▶ INICIAR JUEGO</button>
+                
+                <div style="background:#111; padding:15px; border-radius:6px; margin-top:20px; text-align:center; border: 1px solid #333;">
+                    <div style="display:flex; justify-content:space-around;">
+                        <div><div style="font-size:11px; color:#888;">SALUD</div><div id="stats-hp" style="font-size:24px; color:#ff3333; font-weight:bold;">100</div></div>
+                        <div><div style="font-size:11px; color:#888;">MUNICIÓN</div><div id="stats-ammo" style="font-size:24px; color:#00e5ff; font-weight:bold;">0</div></div>
+                        <div><div style="font-size:11px; color:#888;">PUNTOS</div><div id="stats-score" style="font-size:24px; color:#ffcc00; font-weight:bold;">0</div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="main-area" style="align-items: center; justify-content: center; background: #000;">
+                <div id="gameContainer">
+                    <canvas id="gameCanvas" width="800" height="480"></canvas>
+                    <div id="ui-overlay"></div>
+                </div>
+                <div id="log" style="width: 800px; margin-top: 10px;">Gamet Engine Listo. Bloques condicionales añadidos.<br></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA ARCHITECTURE ---
+        const COLS = 20, ROWS = 12;
+        let map = Array.from({length: ROWS}, () => Array(COLS).fill(0));
+        let backupMap = []; 
+        let backupLevels = {};
+        let isPaintingGlobal = false;
+        let isDrawingSprite = false;
+        let editingSpriteIdx = -1;
+        
+        let globalSprites = []; 
+        let uiCanvasList = {}; 
+        let activeSpriteIdx = -1; 
+        let activeUISpriteIdx = -1;
+
+        let levels = { "Nivel 1": Array.from({length: ROWS}, () => Array(COLS).fill(0)) };
+        let activeLevelName = "Nivel 1";
+
+        let engineConfig = { pSpeed: 0.1, pTurn: 0.005, fogDist: 15, skyColor: '#111111', floorColor: '#050505' };
+
+        let objects = {
+            0: { id: 0, name: 'Borrador (Vacío)', char: ' ', color: '#000', physics: 'ghost', spriteIdx: -1, scripts: [] },
+            1: { id: 1, name: 'Jugador / Arma (@)', char: '@', color: '#00e5ff', physics: 'ghost', spriteIdx: -1, scripts: [] },
+            2: { id: 2, name: 'Muro Base', char: '■', color: '#444', physics: 'solid', spriteIdx: -1, scripts: [] }
+        };
+        let nextObjId = 3; let selectedPaletteId = 2;
+
+        let player = { x: 2, y: 2, vx: 0, vy: 0, angle: 0, speed: engineConfig.pSpeed, hp: 100, ammo: 0, score: 0, alive: true, isBusy: {}, customVars: {} };
+        let activeEntities = []; 
+        let keys = {}; let gameLoop = null; let isPlaying = false;
+        let activeUIName = null; 
+        let spritesRaw = [];
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = false; 
+        const logEl = document.getElementById('log');
+
+        function printLog(msg) { logEl.innerHTML += `<span style="color:#666">[>_]</span> ${msg}<br>`; logEl.scrollTop = logEl.scrollHeight; }
+
+        function showLogoFallback() {
+            document.getElementById('hub-logo').style.display = 'none';
+            document.getElementById('hub-logo-fallback').style.display = 'block';
+        }
+
+        // --- CUSTOM ALARMS AND NOTIFICATIONS SYSTEM ---
+        function showToast(message, type = 'info') {
+            let container = document.getElementById('toast-container');
+            let toast = document.createElement('div');
+            toast.style.background = '#121218';
+            toast.style.color = '#fff';
+            toast.style.borderLeft = `5px solid ${type === 'success' ? '#00cc66' : type === 'error' ? '#ff3333' : type === 'warning' ? '#ffcc00' : '#00e5ff'}`;
+            toast.style.padding = '12px 20px';
+            toast.style.borderRadius = '6px';
+            toast.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
+            toast.style.display = 'flex';
+            toast.style.alignItems = 'center';
+            toast.style.gap = '10px';
+            toast.style.minWidth = '280px';
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(20px)';
+            toast.style.transition = 'all 0.3s ease';
+            toast.style.pointerEvents = 'auto';
+
+            let icon = type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️';
+            toast.innerHTML = `<span style="font-size:18px;">${icon}</span><span style="font-size:13px; font-weight:500;">${message}</span>`;
+            
+            container.appendChild(toast);
+            toast.offsetHeight; // force reflow
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateY(0)';
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-20px)';
+                setTimeout(() => { toast.remove(); }, 300);
+            }, 3500);
+        }
+
+        function showCustomConfirm(title, message, onConfirm, onCancel = null) {
+            let modal = document.getElementById('custom-modal');
+            let modalBox = modal.querySelector('div');
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-message').innerText = message;
+            document.getElementById('modal-icon').innerText = '❓';
+            document.getElementById('modal-btn-cancel').style.display = 'block';
+            
+            modal.style.display = 'flex';
+            setTimeout(() => { modalBox.style.transform = 'scale(1)'; }, 10);
+            
+            document.getElementById('modal-btn-ok').onclick = () => {
+                closeCustomModal();
+                if(onConfirm) onConfirm();
+            };
+            
+            document.getElementById('modal-btn-cancel').onclick = () => {
+                closeCustomModal();
+                if(onCancel) onCancel();
+            };
+        }
+
+        function showCustomAlert(title, message, onConfirm = null) {
+            let modal = document.getElementById('custom-modal');
+            let modalBox = modal.querySelector('div');
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-message').innerText = message;
+            document.getElementById('modal-icon').innerText = '⚠️';
+            document.getElementById('modal-btn-cancel').style.display = 'none';
+            
+            modal.style.display = 'flex';
+            setTimeout(() => { modalBox.style.transform = 'scale(1)'; }, 10);
+            
+            document.getElementById('modal-btn-ok').onclick = () => {
+                closeCustomModal();
+                if(onConfirm) onConfirm();
+            };
+        }
+
+        function closeCustomModal() {
+            let modal = document.getElementById('custom-modal');
+            let modalBox = modal.querySelector('div');
+            modalBox.style.transform = 'scale(0.9)';
+            setTimeout(() => { modal.style.display = 'none'; }, 150);
+        }
+
+        // --- HUB SYSTEM & DEMOS ---
+        let activeCommunityCategory = "todos";
+
+        const COMMUNITY_DEMOS = [
+            {
+                name: "Gamet Laberinto FPS",
+                author: "@gamet_team",
+                isTemplate: true,
+                desc: "Juego de disparos 3D. Contiene enemigos, físicas y UI.",
+                plays: 12450,
+                rating: 94,
+                picks: true,
+                featured: true,
+                data: '{"levels":{"Nivel 1":[[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2],[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],[2,0,1,0,0,0,2,2,2,0,0,3,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,2,2,2,2,0,0,4,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]],"Nivel 2":[[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2],[2,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,2],[2,0,1,0,0,0,0,0,0,0,0,0,2,0,0,3,0,0,0,2],[2,0,0,0,0,0,0,2,2,2,2,2,2,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,2,0,2,2,2,2,2,2,2,2,0,0,2],[2,0,0,0,0,0,0,2,0,2,0,0,0,0,0,0,2,0,0,2],[2,0,0,0,0,0,0,2,0,2,0,0,0,3,0,0,2,0,0,2],[2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,2,0,0,2],[2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,2],[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]]},"activeLevelName":"Nivel 1","objects":{"0":{"id":0,"name":"Borrador (Vacío)","char":" ","color":"#000","physics":"ghost","spriteIdx":-1,"scripts":[]},"1":{"id":1,"name":"Jugador / Arma (@)","char":"@","color":"#00e5ff","physics":"ghost","spriteIdx":-1,"scripts":[{"id":"click_p","type":"click","param":"","blocks":[{"type":"shoot_ray","val":""}]}]},"2":{"id":2,"name":"Muro Base","char":"■","color":"#444","physics":"solid","spriteIdx":-1,"scripts":[]},"3":{"id":3,"name":"Enemigo Básico","char":"X","color":"#ff00aa","physics":"trigger","spriteIdx":-1,"scripts":[{"id":"hit_3","type":"hit","param":"","blocks":[{"type":"destroy","val":""},{"type":"add_score","val":"100"},{"type":"sound","val":"coin"}]},{"id":"collide_3","type":"collide","param":"","blocks":[{"type":"damage","val":"10"},{"type":"shake","val":""},{"type":"wait","val":"1"}]},{"id":"update_3","type":"update","param":"","blocks":[{"type":"chase","val":"1"}]}]},"4":{"id":4,"name":"Puerta","char":"🚪","color":"#00ffcc","physics":"trigger","spriteIdx":-1,"scripts":[{"id":"collide_4","type":"collide","param":"","blocks":[{"type":"load_level","val":"Nivel 2"}]}]}},"uiCanvasList":{},"spritesRaw":[],"engineConfig":{"pSpeed":0.1,"pTurn":0.005,"fogDist":15,"skyColor":"#111111","floorColor":"#050505"}}'
+            },
+            {
+                name: "Gamet Recolector (Demo)",
+                author: "@gamet_team",
+                isTemplate: true,
+                desc: "Busca monedas. Aprende la lógica condicional Si/Sino.",
+                plays: 8520,
+                rating: 89,
+                picks: true,
+                featured: false,
+                data: '{"levels":{"Nivel 1":[[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2],[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],[2,0,1,0,0,0,3,0,0,0,0,3,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,2,2,2,0,0,0,2,2,2,0,0,0,0,0,0,2],[2,0,0,0,2,3,2,0,0,0,2,3,2,0,0,4,0,0,0,2],[2,0,0,0,2,0,2,0,0,0,2,0,2,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]]},"activeLevelName":"Nivel 1","objects":{"0":{"id":0,"name":"Borrador","char":" ","color":"#000","physics":"ghost","spriteIdx":-1,"scripts":[]},"1":{"id":1,"name":"Jugador","char":"@","color":"#00e5ff","physics":"ghost","spriteIdx":-1,"scripts":[]},"2":{"id":2,"name":"Muro","char":"■","color":"#444","physics":"solid","spriteIdx":-1,"scripts":[]},"3":{"id":3,"name":"Moneda","char":"O","color":"#ffcc00","physics":"trigger","spriteIdx":-1,"scripts":[{"id":"c1","type":"collide","param":"","blocks":[{"type":"add_score","val":"100"},{"type":"sound","val":"coin"},{"type":"destroy","val":""}]}]},"4":{"id":4,"name":"Puerta Victoria","char":"🚪","color":"#00ffcc","physics":"trigger","spriteIdx":-1,"scripts":[{"id":"c2","type":"collide","param":"","blocks":[{"type":"if_var_msg","val":"SCORE,>,19,Gano"}]}]}},"uiCanvasList":{},"spritesRaw":[],"engineConfig":{"pSpeed":0.1,"pTurn":0.005,"fogDist":15,"skyColor":"#111111","floorColor":"#050505"}}'
+            },
+            {
+                name: "Backrooms Escape",
+                author: "@player123",
+                isTemplate: false,
+                desc: "Intenta escapar del nivel 0. (Ejemplo JUGAR).",
+                plays: 34100,
+                rating: 96,
+                picks: false,
+                featured: true,
+                data: '{"levels":{"Nivel 1":[[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2],[2,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,2],[2,0,1,0,0,0,0,0,2,0,0,2,2,2,2,2,0,0,0,2],[2,0,0,0,0,0,0,0,2,0,0,2,0,0,0,2,0,0,0,2],[2,0,0,0,2,2,2,0,2,0,0,2,0,4,0,2,0,0,0,2],[2,0,0,0,2,0,2,0,0,0,0,2,0,0,0,2,0,0,0,2],[2,0,0,0,2,0,2,0,0,0,0,2,2,2,2,2,0,0,0,2],[2,0,0,0,2,0,2,2,2,2,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]]},"activeLevelName":"Nivel 1","objects":{"0":{"id":0,"name":"Borrador (Vacío)","char":" ","color":"#000","physics":"ghost","spriteIdx":-1,"scripts":[]},"1":{"id":1,"name":"Jugador","char":"@","color":"#00e5ff","physics":"ghost","spriteIdx":-1,"scripts":[]},"2":{"id":2,"name":"Pared Amarilla","char":"■","color":"#cccc33","physics":"solid","spriteIdx":-1,"scripts":[]},"4":{"id":4,"name":"Salida","char":"🚪","color":"#00ffcc","physics":"trigger","spriteIdx":-1,"scripts":[{"id":"c4","type":"collide","param":"","blocks":[{"type":"win","val":""}]}]}},"uiCanvasList":{},"spritesRaw":[],"engineConfig":{"pSpeed":0.1,"pTurn":0.005,"fogDist":10,"skyColor":"#222211","floorColor":"#111100"}}'
+            },
+            {
+                name: "Patas al Rescate",
+                author: "@AXEL-TONTITO",
+                isTemplate: false,
+                desc: "¡Evita a los humanos abrazadores y llega a tu plato!",
+                plays: 1200,
+                rating: 98,
+                picks: false,
+                featured: false,
+                data: '{"levels":{"Nivel 1":[[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2],[2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,2,0,2],[2,0,1,0,2,0,0,0,0,2,0,0,0,0,0,0,0,2,4,2],[2,0,0,0,2,3,0,0,0,2,0,0,0,0,0,0,0,2,0,2],[2,0,0,0,2,0,0,0,0,2,0,0,0,0,0,0,0,2,0,2],[2,2,2,2,2,0,0,0,0,2,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,0,2,2,2,2,2,2,0,0,0,0,2],[2,0,0,0,0,2,0,0,3,0,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,2,0,0,0,0,3,0,0,0,0,0,0,0,0,2],[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]],"Nivel 2":[[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2],[2,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,2,0,0,2],[2,0,1,0,0,2,0,0,0,0,0,0,3,0,0,0,2,0,0,2],[2,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,2,0,0,2],[2,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,2,0,0,2],[2,0,0,0,0,2,2,2,2,2,0,0,0,0,0,0,2,0,0,2],[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,2],[2,0,0,2,0,0,0,0,0,0,0,0,0,2,2,2,2,0,0,2],[2,0,0,2,0,0,0,0,0,2,2,0,0,2,2,0,0,0,0,2],[2,0,0,2,0,0,0,0,0,2,0,0,0,0,0,0,3,0,0,2],[2,0,0,2,0,0,0,3,0,2,0,0,0,0,0,0,0,0,0,2],[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]]},"activeLevelName":"Nivel 1","objects":{"0":{"id":0,"name":"Patio Libre (Vacío)","char":" ","color":"#000","physics":"ghost","spriteIdx":-1,"scripts":[]},"1":{"id":1,"name":"Michi/Firulais Aventurero","char":"@","color":"#ff9f43","physics":"ghost","spriteIdx":-1,"scripts":[]},"2":{"id":2,"name":"Cerca de la Comunidad","char":"■","color":"#8b5a2b","physics":"solid","spriteIdx":-1,"scripts":[]},"3":{"id":3,"name":"Humano Abrazador","char":"H","color":"#ff4d4d","physics":"trigger","spriteIdx":0,"scripts":[{"id":"comunidad_chase","type":"update","param":"","blocks":[{"type":"chase","val":null}]},{"id":"comunidad_bounce","type":"update","param":"","blocks":[{"type":"bounce","val":null}]}]},"4":{"id":4,"name":"Plato Croquetas","char":"C","color":"#00dbff","physics":"trigger","spriteIdx":1,"scripts":[{"id":"comunidad_portal","type":"collide","param":"","blocks":[{"type":"load_level","val":"Nivel 2"}]}]}},"uiCanvasList":{},"spritesRaw":[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"#ffffff","#ffffff",0,0,0,0,0,"#ffffff",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"#ffffff",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"#ffffff",0,0,0,0,0,0,0,0,"#ffffff",0,0,0,0,0,0,"#ffffff","#ffffff",0,0,0,0,0,0,"#ffffff","#ffffff",0,0,0,0,0,0,0,"#ffffff",0,0,0,0,0,0,"#ffffff",0,0,0,0,0,0,0,0,0,"#ffffff","#ffffff",0,0,"#ffffff","#ffffff",0,0,0,0,0,0,0,0,0,0,0,0,"#ffffff","#ffffff","#ffffff",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"#f5f5f5","#f5f5f5","#f5f5f5","#f5f5f5",0,0,0,0,0,0,0,0,0,0,0,"#f5f5f5","#00c8fa","#00c8fa","#00c8fa","#00c8fa","#f5f5f5",0,0,0,0,0,0,0,0,0,"#f5f5f5","#00c8fa","#00c8fa","#00c8fa","#00c8fa","#00c8fa","#00c8fa","#f5f5f5",0,0,0,0,0,0,0,"#f5f5f5","#00c8fa","#00c8fa","#00c8fa","#00495c","#00495c","#00495c","#00c8fa","#00c8fa","#f5f5f5",0,0,0,0,0,0,"#f5f5f5","#00c8fa","#00c8fa","#00495c","#00495c","#00c8fa","#00c8fa","#00c8fa","#00c8fa","#f5f5f5",0,0,0,0,0,0,"#f5f5f5","#00c8fa","#00c8fa","#00495c","#00c8fa","#00c8fa","#00c8fa","#00c8fa","#00c8fa","#f5f5f5",0,0,0,0,0,0,"#f5f5f5","#00c8fa","#00495c","#00495c","#00c8fa","#00495c","#00495c","#00495c","#00c8fa","#f5f5f5",0,0,0,0,0,0,"#f5f5f5","#00c8fa","#00495c","#00495c","#00c8fa","#00c8fa","#00c8fa","#00495c","#00c8fa","#f5f5f5",0,0,0,0,0,0,"#f5f5f5","#00c8fa","#00c8fa","#00495c","#00495c","#00495c","#00495c","#00c8fa","#00c8fa","#f5f5f5",0,0,0,0,0,0,0,"#f5f5f5","#00c8fa","#00c8fa","#00495c","#00495c","#00c8fa","#00c8fa","#f5f5f5",0,0,0,0,0,0,0,0,0,"#f5f5f5","#00c8fa","#00c8fa","#00c8fa","#00c8fa","#f5f5f5",0,0,0,0,0,0,0,0,0,0,0,"#f5f5f5","#f5f5f5","#f5f5f5","#f5f5f5",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],"engineConfig":{"pSpeed":0.12,"pTurn":0.006,"fogDist":13,"skyColor":"#0f172a","floorColor":"#14532d"}}'
+            },
+            {
+                name: "Papas",
+                author: "@gamet_team",
+                isTemplate: false,
+                desc: "LOCUUUUUUUUUUURA",
+                plays: 8329105,
+                rating: 2,
+                picks: false,
+                featured: false,
+                data: '{"levels":{"Nivel 1":[[2,0,2,2,2,2,2,2,2,0,0,0,0,0,2,2,2,2,2,2],[2,2,0,0,0,0,0,0,0,2,2,2,2,2,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,2],[2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],[2,0,0,1,0,0,0,0,0,0,0,0,0,0,0,3,0,0,2,2],[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2],[2,0,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]]},"activeLevelName":"Nivel 1","objects":{"0":{"id":0,"name":"Borrador (Vacío)","char":" ","color":"#000","physics":"ghost","spriteIdx":-1,"scripts":[]},"1":{"id":1,"name":"Jugador / Arma (@)","char":"@","color":"#00e5ff","physics":"ghost","spriteIdx":-1,"scripts":[]},"2":{"id":2,"name":"Muro Base","char":"■","color":"#444","physics":"solid","spriteIdx":-1,"scripts":[]},"3":{"id":3,"name":"Papa","char":"X","color":"#ff00aa","physics":"trigger","spriteIdx":0,"scripts":[{"id":"evt_5nyhpf7zi","type":"update","param":"","blocks":[{"type":"chase","val":null}]},{"id":"evt_spidm6fiu","type":"collide","param":"","blocks":[{"type":"damage","val":"10"},{"type":"teleport","val":"9,5"}]}]}},"uiCanvasList":{},"spritesRaw":[[0,0,0,0,0,0,0,0,0,"#ffffff","#ffffff",0,0,0,0,0,0,0,0,0,0,0,0,"#ffffff","#ffffff",0,"#ffffff",0,0,0,0,0,0,0,0,"#ffffff",0,0,"#ffffff","#ffffff","#ffffff","#ffffff","#ffffff","#ffffff",0,0,0,0,0,0,0,0,0,"#ffffff","#ffffff",0,0,"#ffffff","#ffffff",0,0,0,0,0,0,0,0,"#ffffff",0,"#ffffff",0,"#ffffff","#ffffff",0,"#ffffff","#ffffff",0,0,0,0,0,0,0,0,0,"#ffffff",0,"#ffffff","#ffffff",0,"#ffffff","#ffffff",0,0,0,0,0,0,0,"#ffffff",0,"#ffffff","#ffffff","#ffffff","#ffffff","#ffffff",0,"#ffffff",0,0,0,0,0,0,0,"#ffffff",0,"#ffffff","#ffffff","#ffffff","#ffffff","#ffffff","#ffffff",0,0,0,0,0,0,0,0,"#ffffff",0,0,"#ffffff","#ffffff",0,0,0,0,0,0,0,0,0,0,0,"#ffffff","#ffffff",0,0,"#ffffff",0,"#ffffff",0,0,0,0,0,0,0,0,0,0,"#ffffff","#ffffff",0,"#ffffff","#ffffff",0,0,0,0,0,0,0,0,0,0,0,0,0,"#ffffff","#ffffff",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"#ffffff",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"#ffffff",0,0,0,0,0,0,0,0,0,0,0,0,"#ffffff","#ffffff",0,"#ffffff","#ffffff",0,0,0,0,0,0,0,0,0,0,0,"#ffffff",0,"#ffffff","#ffffff",0,"#ffffff",0,0,0,0,0,0]],"engineConfig":{"pSpeed":0.1,"pTurn":0.005,"fogDist":15,"skyColor":"#111111","floorColor":"#050505"}}'
+            }
+        ];
+
+        function showHubTab(tabName) {
+            document.getElementById('btn-tab-local').classList.remove('active');
+            document.getElementById('btn-tab-com').classList.remove('active');
+            document.getElementById('hub-local').classList.remove('active');
+            document.getElementById('hub-community').classList.remove('active');
+            
+            if(tabName === 'local') {
+                document.getElementById('btn-tab-local').classList.add('active');
+                document.getElementById('hub-local').classList.add('active');
+                refreshHubProjects();
+            } else {
+                document.getElementById('btn-tab-com').classList.add('active');
+                document.getElementById('hub-community').classList.add('active');
+                loadCommunityDemos();
+            }
+        }
+
+        // --- SISTEMA DE ALGORITMOS PARA PESTAÑAS DE COMUNIDAD ---
+        function switchCommunityCategory(category) {
+            document.querySelectorAll('.com-subtab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            activeCommunityCategory = category;
+            loadCommunityDemos();
+        }
+
+        function factoryReset() {
+            showCustomConfirm("Restaurar de Fábrica", "¿Quieres borrar TODOS los proyectos locales de Gamet y restaurar el motor a su estado de fábrica?", () => {
+                localStorage.removeItem('unboring_projects'); 
+                location.reload(); 
+            });
+        }
+
+        // --- SISTEMA DE COMUNIDAD ESTILO ROBLOX ---
+        function loadCommunityDemos() {
+            let container = document.getElementById('hub-community-list');
+            container.innerHTML = '';
+            
+            let listToRender = [...COMMUNITY_DEMOS];
+            
+            // Aplicar buscador
+            let searchInput = document.getElementById('com-search');
+            if (searchInput && searchInput.value) {
+                let searchTerm = searchInput.value.toLowerCase();
+                listToRender = listToRender.filter(demo => 
+                    demo.name.toLowerCase().includes(searchTerm) || 
+                    demo.author.toLowerCase().includes(searchTerm) ||
+                    demo.desc.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            // Aplicar filtros de pestañas
+            if (activeCommunityCategory === "destacados") {
+                listToRender = listToRender.filter(demo => demo.rating >= 90 && demo.plays >= 5000);
+                listToRender.sort((a, b) => b.plays - a.plays);
+            } else if (activeCommunityCategory === "prometedores") {
+                listToRender = listToRender.filter(demo => demo.rating >= 95 && demo.plays < 5000);
+                listToRender.sort((a, b) => b.rating - a.rating);
+            } else if (activeCommunityCategory === "picks") {
+                listToRender = listToRender.filter(demo => demo.picks || demo.author === "@gamet_team");
+            }
+            
+            if(listToRender.length === 0) {
+                container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #666; padding: 40px; font-size: 14px;">No se ha encontrado nada con esta búsqueda o filtro.</div>`;
+                return;
+            }
+
+            listToRender.forEach((demo) => {
+                let index = COMMUNITY_DEMOS.findIndex(d => d.name === demo.name && d.author === demo.author);
+                
+                let card = document.createElement('div');
+                card.className = 'hub-card';
+                
+                let isTpl = demo.isTemplate;
+                let badgeClass = isTpl ? 'template' : 'game';
+                let badgeText = isTpl ? ' Plantilla Editable' : ' Juego Terminado';
+                let colorBorder = isTpl ? '#00e5ff' : '#00cc66';
+                
+                card.innerHTML = `
+                    <div class="thumb" style="border-bottom-color: ${colorBorder};">
+                        🎮
+                    </div>
+                    <div class="info">
+                        <h4>${demo.name}</h4>
+                        <p class="author">Autor: ${demo.author}</p>
+                        <div class="stats-line">
+                            <span>👍 ${demo.rating}%</span>
+                            <span>👁️ ${demo.plays.toLocaleString()}</span>
+                        </div>
+                        <span class="badge ${badgeClass}">${badgeText}</span>
+                        ${isTpl ? 
+                            `<button onclick="downloadCommunityDemo(${index})" style="background:#00a2ff; color:#000;">👥 Remezclar Plantilla</button>` : 
+                            `<button onclick="playCommunityDemo(${index})" style="background:#00cc66; color:#000;">▶️ JUGAR AHORA</button>`
+                        }
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function downloadCommunityDemo(index) {
+            let demo = COMMUNITY_DEMOS[index];
+            let projects = getProjectsFromStorage();
+            
+            let finalName = "Remezcla de " + demo.name;
+            let counter = 1;
+            while (projects[finalName]) { finalName = "Remezcla de " + demo.name + " (" + counter + ")"; counter++; }
+            
+            try {
+                projects[finalName] = JSON.parse(demo.data);
+                saveProjectsToStorage(projects);
+                showToast(`¡Juego '${finalName}' descargado a tus proyectos locales! Ready para editar.`, "success");
+                showHubTab('local'); 
+            } catch(e) {
+                showToast("Error al instalar la plantilla.", "error");
+            }
+        }
+
+        // --- FUNCIÓN JUGAR EN MODAL (TIPO ROBLOX) ---
+        function playCommunityDemo(index) {
+            let demo = COMMUNITY_DEMOS[index];
+            let htmlStr = getPlayableHTMLString(demo.data, demo.name);
+            let blob = new Blob([htmlStr], {type: "text/html"});
+            let url = URL.createObjectURL(blob);
+            
+            document.getElementById('play-modal-title').innerText = "Jugando: " + demo.name + " (por " + demo.author + ")";
+            document.getElementById('play-iframe').src = url;
+            document.getElementById('play-modal').style.display = 'flex';
+        }
+
+        function closePlayModal() {
+            document.getElementById('play-modal').style.display = 'none';
+            document.getElementById('play-iframe').src = 'about:blank';
+        }
+
+        // --- FUNCIONES ORIGINALES DEL HUB LOCAL ---
+        function refreshHubProjects() {
+            let projects = getProjectsFromStorage();
+            let container = document.getElementById('hub-project-list');
+            container.innerHTML = '';
+            
+            let keysList = Object.keys(projects);
+            if (keysList.length === 0) {
+                container.innerHTML = '<p style="color:#666; text-align:center; font-size:13px; margin:20px 0;">No tienes proyectos guardados todavía. ¡Crea uno arriba!</p>';
+                return;
+            }
+
+            keysList.forEach(name => {
+                let card = document.createElement('div');
+                card.className = 'project-card';
+                card.innerHTML = `
+                    <div class="project-info">
+                        <h4>${name}</h4>
+                        <p>Guardado localmente</p>
+                    </div>
+                    <div class="project-actions">
+                        <button onclick="hubLoadProject('${name}')" style="background:#00cc66; color:#000;">📝 Editar</button>
+                        <button onclick="hubDuplicateProject('${name}')" style="background:#00a2ff; color:#000;">👥 Duplicar</button>
+                        <button onclick="hubDeleteProject('${name}')" style="background:#ff3366; color:#fff;">🗑️ Eliminar</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function getProjectsFromStorage() {
+            try {
+                let saved = localStorage.getItem('unboring_projects');
+                return saved ? JSON.parse(saved) : {};
+            } catch(e) {
+                console.error("Carga de proyectos fallida, reajustando almacenamiento local.", e);
+                return {};
+            }
+        }
+
+        function saveProjectsToStorage(projects) {
+            try {
+                localStorage.setItem('unboring_projects', JSON.stringify(projects));
+            } catch(e) {}
+        }
+
+        function hubCreateProject() {
+            let nameInput = document.getElementById('new-project-name');
+            let name = nameInput.value.trim();
+            if (!name) { showCustomAlert("Nombre Requerido", "¡Por favor introduce un nombre de juego!"); return; }
+            
+            let projects = getProjectsFromStorage();
+            if (projects[name]) { showCustomAlert("Nombre Duplicado", "Ya existe un juego local con ese nombre."); return; }
+
+            projects[name] = {
+                levels: { "Nivel 1": Array.from({length: ROWS}, () => Array(COLS).fill(0)) },
+                activeLevelName: "Nivel 1",
+                objects: {
+                    0: { id: 0, name: 'Borrador (Vacío)', char: ' ', color: '#000', physics: 'ghost', spriteIdx: -1, scripts: [] },
+                    1: { id: 1, name: 'Jugador / Arma (@)', char: '@', color: '#00e5ff', physics: 'ghost', spriteIdx: -1, scripts: [] },
+                    2: { id: 2, name: 'Muro Base', char: '■', color: '#444', physics: 'solid', spriteIdx: -1, scripts: [] }
+                },
+                uiCanvasList: {},
+                spritesRaw: [],
+                engineConfig: { pSpeed: 0.1, pTurn: 0.005, fogDist: 15, skyColor: '#111111', floorColor: '#050505' }
+            };
+            
+            for(let i=0; i<COLS; i++) { projects[name].levels["Nivel 1"][0][i]=2; projects[name].levels["Nivel 1"][ROWS-1][i]=2; }
+            for(let i=0; i<ROWS; i++) { projects[name].levels["Nivel 1"][i][0]=2; projects[name].levels["Nivel 1"][i][COLS-1]=2; }
+            projects[name].levels["Nivel 1"][2][2] = 1;
+
+            saveProjectsToStorage(projects);
+            nameInput.value = '';
+            refreshHubProjects();
+            printLog(`Juego '${name}' creado.`);
+        }
+
+        function hubLoadProject(name) {
+            let projects = getProjectsFromStorage();
+            let proj = projects[name];
+            if (!proj) return;
+
+            currentProjectName = name;
+            
+            let gridEl = document.getElementById('grid');
+            if (gridEl.children.length === 0) initGrid();
+            let se = document.getElementById('sprite-editor');
+            if (se.children.length === 0) initSpriteEditor();
+            
+            document.getElementById('hub-view').style.display = 'none';
+            document.getElementById('workspace-view').style.display = 'flex';
+
+            loadProjectJSON(JSON.stringify(proj)).then(() => {
+                switchTab('tab-world');
+                printLog(`Editando juego: '${name}'`);
+            }).catch(err => {
+                showCustomAlert("Error de Carga", "Error crítico leyendo el JSON: " + (err.message || "Archivo Corrupto"));
+                printLog("Error de lectura en el proyecto.");
+            });
+        }
+
+        async function loadProjectJSON(jsonString) {
+            try {
+                let parsed = JSON.parse(jsonString);
+                if (!parsed.levels || !parsed.objects) {
+                    throw new Error("Formato del JSON no válido para Gamet Studio");
+                }
+                
+                levels = parsed.levels;
+                activeLevelName = parsed.activeLevelName || Object.keys(levels)[0];
+                map = JSON.parse(JSON.stringify(levels[activeLevelName]));
+                
+                objects = parsed.objects;
+                let maxId = 2;
+                Object.keys(objects).forEach(id => {
+                    let numId = parseInt(id);
+                    if (numId > maxId) maxId = numId;
+                });
+                nextObjId = maxId + 1;
+                
+                uiCanvasList = parsed.uiCanvasList || {};
+                
+                if (parsed.engineConfig) {
+                    engineConfig = parsed.engineConfig;
+                    loadEngineConfigToUI();
+                }
+                
+                globalSprites = parsed.spritesRaw || [];
+                
+                updateLevelSelectUI();
+                updatePalette();
+                updateObjSelect();
+                updateUISelect();
+                refreshSpriteGalleries();
+                refreshGridVisuals();
+                
+                return true;
+            } catch (e) {
+                throw new Error("No se pudo parsear el archivo: " + e.message);
+            }
+        }
+
+        function hubDuplicateProject(name) {
+            let projects = getProjectsFromStorage();
+            let src = projects[name];
+            if (!src) return;
+
+            let newName = name + " - Copia";
+            let counter = 1;
+            while (projects[newName]) { newName = name + " - Copia " + counter; counter++; }
+
+            projects[newName] = JSON.parse(JSON.stringify(src));
+            saveProjectsToStorage(projects); refreshHubProjects();
+        }
+
+        function hubDeleteProject(name) {
+            showCustomConfirm("Eliminar Juego", `¿Estás seguro de que quieres eliminar el juego '${name}'? No se podrá recuperar de ninguna forma.`, () => {
+                let projects = getProjectsFromStorage();
+                delete projects[name];
+                saveProjectsToStorage(projects); refreshHubProjects();
+            });
+        }
+
+        function saveProjectToHub() {
+            if (!currentProjectName) {
+                showToast("No hay un proyecto abierto para guardar.", "error");
+                return;
+            }
+            try {
+                // Sincronizar el mapa actual antes de guardar
+                if (activeLevelName) {
+                    levels[activeLevelName] = JSON.parse(JSON.stringify(map));
+                }
+                let projects = getProjectsFromStorage();
+                let pj = getProjectJSONRawObj();
+                if (pj) {
+                    projects[currentProjectName] = pj;
+                    saveProjectsToStorage(projects);
+                    printLog(`Cambios guardados.`);
+                    showToast("¡Proyecto guardado con éxito!", "success");
+                }
+            } catch(e) { 
+                showToast("Error al guardar: " + e.message, "error");
+                console.error(e);
+            }
+        }
+
+        function hubGoBack() {
+            saveProjectToHub();
+            currentProjectName = null;
+            document.getElementById('workspace-view').style.display = 'none';
+            document.getElementById('hub-view').style.display = 'flex';
+            refreshHubProjects();
+        }
+
+        function hubImportProject(event) {
+            let file = event.target.files[0]; if(!file) return;
+            let reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    let raw = e.target.result; let parsed = JSON.parse(raw);
+                    let name = file.name.replace('.json', '');
+                    let projects = getProjectsFromStorage();
+                    
+                    let finalName = name; let counter = 1;
+                    while (projects[finalName]) { finalName = name + "_" + counter; counter++; }
+                    projects[finalName] = parsed; saveProjectsToStorage(projects); refreshHubProjects();
+                    showToast(`¡Proyecto importado con éxito como '${finalName}'!`, "success");
+                } catch(err) { showCustomAlert("Error de Importación", "Error al importar el archivo JSON. Archivo dañado o corrupto."); }
+            };
+            reader.readAsText(file);
+        }
+
+        // --- SISTEMA DE EXPORTACIÓN COMUNIDAD (TEST) ---
+        function generateCommunityCode() {
+            if (activeLevelName) { levels[activeLevelName] = JSON.parse(JSON.stringify(map)); }
+            
+            let author = document.getElementById('com-author').value || '@anonimo';
+            let desc = document.getElementById('com-desc').value || 'Un juego genial hecho en Gamet Studio.';
+            let isTemplate = document.getElementById('com-template').checked;
+            
+            let pjString = JSON.stringify(getProjectJSONRawObj());
+            // Escapamos comillas simples y barras invertidas para no romper la inyección del String JS
+            let safeData = pjString.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+            
+            let codeObj = `{\n    name: "${currentProjectName || 'Mi Juego'}",\n    author: "${author}",\n    isTemplate: ${isTemplate},\n    desc: "${desc}",\n    plays: 0,\n    rating: 100,\n    picks: false,\n    featured: false,\n    data: '${safeData}'\n}`;
+            
+            document.getElementById('community-form-modal').style.display = 'none';
+            document.getElementById('community-export-text').value = codeObj;
+            document.getElementById('community-export-modal').style.display = 'flex';
+        }
+
+        function copyCommunityCode() {
+            let copyText = document.getElementById("community-export-text");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+            try {
+                document.execCommand('copy');
+                showToast("¡Código de la comunidad copiado!", "success");
+                setTimeout(() => { document.getElementById('community-export-modal').style.display = 'none'; }, 1500);
+            } catch(e) {
+                showToast("Error al copiar. Selecciona y copia manualmente.", "error");
+            }
+        }
+
+        // --- GESTIÓN DE NIVELES ---
+        function selectLevel(lvlName) {
+            if (!levels[lvlName]) return;
+            levels[activeLevelName] = JSON.parse(JSON.stringify(map));
+            activeLevelName = lvlName;
+            map = JSON.parse(JSON.stringify(levels[activeLevelName]));
+            updateLevelSelectUI();
+            refreshGridVisuals();
+            saveProjectToHub();
+        }
+
+        function createNewLevel() {
+            let nameInput = document.getElementById('new-level-name');
+            let name = nameInput.value.trim();
+            if (!name) return;
+            if (levels[name]) { showCustomAlert("Nivel Duplicado", "Ya existe un nivel con ese nombre."); return; }
+            levels[name] = Array.from({length: ROWS}, () => Array(COLS).fill(0));
+            for(let i=0; i<COLS; i++) { levels[name][0][i]=2; levels[name][ROWS-1][i]=2; }
+            for(let i=0; i<ROWS; i++) { levels[name][i][0]=2; levels[name][i][COLS-1]=2; }
+            levels[name][2][2] = 1; 
+            
+            nameInput.value = '';
+            updateLevelSelectUI();
+            selectLevel(name);
+        }
+
+        function deleteActiveLevel() {
+            let keys = Object.keys(levels);
+            if (keys.length <= 1) { showCustomAlert("Límite de Niveles", "Debes tener al menos un nivel en tu juego."); return; }
+            showCustomConfirm("Borrar Nivel", "¿Estás seguro de que quieres borrar el nivel " + activeLevelName + "?", () => {
+                delete levels[activeLevelName];
+                let nextLvl = Object.keys(levels)[0];
+                activeLevelName = nextLvl;
+                map = JSON.parse(JSON.stringify(levels[activeLevelName]));
+                updateLevelSelectUI();
+                refreshGridVisuals();
+                saveProjectToHub();
+            });
+        }
+
+        function updateLevelSelectUI() {
+            let sel = document.getElementById('level-select');
+            if (!sel) return;
+            sel.innerHTML = '';
+            Object.keys(levels).forEach(k => {
+                let opt = document.createElement('option');
+                opt.value = k;
+                opt.textContent = k;
+                if (k === activeLevelName) opt.selected = true;
+                sel.appendChild(opt);
+            });
+        }
+
+        // --- ENGINE CONFIG ---
+        function updateEngineConfig() {
+            engineConfig.pSpeed = parseFloat(document.getElementById('cfg-pspeed').value) || 0.1;
+            engineConfig.pTurn = parseFloat(document.getElementById('cfg-pturn').value) || 0.005;
+            engineConfig.fogDist = parseFloat(document.getElementById('cfg-fog').value) || 15;
+            engineConfig.skyColor = document.getElementById('cfg-sky').value || '#111111';
+            engineConfig.floorColor = document.getElementById('cfg-floor').value || '#050505';
+            saveProjectToHub();
+        }
+        function loadEngineConfigToUI() {
+            document.getElementById('cfg-pspeed').value = engineConfig.pSpeed;
+            document.getElementById('cfg-pturn').value = engineConfig.pTurn;
+            document.getElementById('cfg-fog').value = engineConfig.fogDist;
+            document.getElementById('cfg-sky').value = engineConfig.skyColor;
+            document.getElementById('cfg-floor').value = engineConfig.floorColor;
+        }
+
+        // --- AUDIO ENGINE ---
+        let actx = null;
+        function playSfx(type) {
+            try {
+                if(!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+                if(actx.state === 'suspended') actx.resume();
+                let osc = actx.createOscillator(); let gain = actx.createGain();
+                osc.connect(gain); gain.connect(actx.destination); let t = actx.currentTime;
+                
+                if(type === 'pew') {
+                    osc.type = 'square'; osc.frequency.setValueAtTime(800, t); osc.frequency.exponentialRampToValueAtTime(100, t + 0.2);
+                    gain.gain.setValueAtTime(0.3, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.2); osc.start(t); osc.stop(t + 0.2);
+                } else if (type === 'hurt') {
+                    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, t); osc.frequency.exponentialRampToValueAtTime(50, t + 0.3);
+                    gain.gain.setValueAtTime(0.5, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3); osc.start(t); osc.stop(t + 0.3);
+                } else if (type === 'coin') {
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(1000, t); osc.frequency.setValueAtTime(1500, t + 0.1);
+                    gain.gain.setValueAtTime(0.3, t); gain.gain.linearRampToValueAtTime(0, t + 0.3); osc.start(t); osc.stop(t + 0.3);
+                } else if (type === 'jump') {
+                    osc.type = 'triangle'; osc.frequency.setValueAtTime(400, t); osc.frequency.linearRampToValueAtTime(800, t + 0.15);
+                    gain.gain.setValueAtTime(0.3, t); gain.gain.linearRampToValueAtTime(0, t + 0.2); osc.start(t); osc.stop(t + 0.2);
+                }
+            } catch(e){}
+        }
+
+        window.addEventListener('pointerup', () => { isPaintingGlobal = false; isDrawingSprite = false; });
+        window.addEventListener('pointercancel', () => { isPaintingGlobal = false; isDrawingSprite = false; });
+
+        function switchTab(tabId) {
+            if(isPlaying) togglePlay(); 
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            if (event) event.target.classList.add('active'); 
+            document.getElementById(tabId).classList.add('active');
+            if(tabId === 'tab-world') updatePalette();
+            if(tabId === 'tab-chars') updateObjSelect();
+            if(tabId === 'tab-ui') refreshSpriteGalleries();
+        }
+
+        // --- WORLD EDITOR ---
+        function initGrid() {
+            let gridEl = document.getElementById('grid'); gridEl.innerHTML = '';
+            gridEl.style.gridTemplateColumns = `repeat(${COLS}, 1fr)`; gridEl.style.gridTemplateRows = `repeat(${ROWS}, 1fr)`;
+            for(let y=0; y<ROWS; y++) {
+                for(let x=0; x<COLS; x++) {
+                    let cell = document.createElement('div'); cell.className = 'cell';
+                    cell.addEventListener('pointerdown', (e) => { 
+                        if(e.button !== 0 && e.pointerType === 'mouse') return;
+                        e.preventDefault(); 
+                        isPaintingGlobal = true; 
+                        if (e.target.releasePointerCapture) e.target.releasePointerCapture(e.pointerId);
+                        paintMap(x, y, cell); 
+                    });
+                    cell.addEventListener('pointerenter', (e) => { if(isPaintingGlobal) paintMap(x, y, cell); });
+                    gridEl.appendChild(cell);
+                }
+            }
+            updateLevelSelectUI();
+            refreshGridVisuals(); updatePalette();
+        }
+
+        function applyVisuals(cell, objId) {
+            if (!cell) return;
+            let obj = objects[objId] || objects[0]; 
+            if(obj.spriteIdx >= 0 && globalSprites[obj.spriteIdx]) {
+                let scx = document.createElement('canvas'); scx.width=16; scx.height=16;
+                let sdx = scx.getContext('2d');
+                let sArr = globalSprites[obj.spriteIdx];
+                if (sArr && sArr.length === 256) {
+                    for(let k=0; k<256; k++) {
+                        if(sArr[k] !== 0 && sArr[k] !== 'transparent') {
+                            sdx.fillStyle = sArr[k];
+                            sdx.fillRect(k%16, Math.floor(k/16), 1, 1);
+                        }
+                    }
+                }
+                cell.style.backgroundImage = "url(" + scx.toDataURL() + ")"; cell.textContent = ''; cell.style.backgroundColor = 'transparent';
+            } else {
+                cell.style.backgroundImage = 'none'; cell.textContent = obj.char; cell.style.color = obj.color; cell.style.backgroundColor = obj.id === 0 ? '#000' : '#111';
+            }
+        }
+        function paintMap(x, y, cell) { 
+            if(y>=0 && y<ROWS && x>=0 && x<COLS) {
+                map[y][x] = selectedPaletteId; applyVisuals(cell, selectedPaletteId); saveProjectToHub(); 
+            }
+        }
+        function refreshGridVisuals() {
+            let cells = document.getElementById('grid').children;
+            if (cells.length === 0) return;
+            for(let y=0; y<ROWS; y++) { for(let x=0; x<COLS; x++) { applyVisuals(cells[y*COLS + x], map[y][x]); } }
+        }
+        function clearMap() { map = Array.from({length: ROWS}, () => Array(COLS).fill(0)); map[2][2] = 1; refreshGridVisuals(); saveProjectToHub(); }
+        
+        function updatePalette() {
+            let pContainer = document.getElementById('palette-container'); pContainer.innerHTML = '';
+            Object.values(objects).forEach(obj => {
+                let div = document.createElement('div'); div.className = `palette-item ${selectedPaletteId === obj.id ? 'selected' : ''}`;
+                let iconHTML = '';
+                if (obj.spriteIdx >= 0 && globalSprites[obj.spriteIdx]) {
+                    let scx = document.createElement('canvas'); scx.width=16; scx.height=16;
+                    let sdx = scx.getContext('2d');
+                    let sArr = globalSprites[obj.spriteIdx];
+                    if (sArr && sArr.length === 256) {
+                        for(let k=0; k<256; k++) {
+                            if(sArr[k] !== 0 && sArr[k] !== 'transparent') {
+                                sdx.fillStyle = sArr[k];
+                                sdx.fillRect(k%16, Math.floor(k/16), 1, 1);
+                            }
+                        }
+                    }
+                    iconHTML = `<div class="palette-icon" style="background-image:url(${scx.toDataURL()})"></div>`;
+                } else {
+                    iconHTML = `<div class="palette-icon" style="display:flex; justify-content:center; align-items:center; color:${obj.color}; font-weight:bold;">${obj.char}</div>`;
+                }
+                div.innerHTML = `${iconHTML} ID: ${obj.id} - ${obj.name}`; div.onclick = () => { selectedPaletteId = obj.id; updatePalette(); }
+                pContainer.appendChild(div);
+            });
+        }
+
+        // --- SPRITE EDITOR ---
+        let currentPixels = Array(256).fill('transparent');
+        function initSpriteEditor() {
+            let se = document.getElementById('sprite-editor'); se.innerHTML = '';
+            for(let i=0; i<256; i++) {
+                let p = document.createElement('div'); p.className = 'pixel';
+                p.addEventListener('pointerdown', (e) => { 
+                    if(e.button !== 0 && e.pointerType === 'mouse') return;
+                    e.preventDefault(); 
+                    isDrawingSprite = true; 
+                    if (e.target.releasePointerCapture) e.target.releasePointerCapture(e.pointerId);
+                    paintPixel(i, p); 
+                });
+                p.addEventListener('pointerenter', (e) => { if(isDrawingSprite) paintPixel(i, p); });
+                se.appendChild(p);
+            }
+            drawOnionSkin();
+        }
+        
+        function paintPixel(centerIdx, el) {
+            let size = parseInt(document.getElementById('brush-size').value) || 1;
+            let col = centerIdx % 16;
+            let row = Math.floor(centerIdx / 16);
+            let color = document.getElementById('paint-color').value;
+            let se = document.getElementById('sprite-editor');
+            
+            let pixelsToPaint = [];
+            if (size === 1) {
+                pixelsToPaint.push({r: row, c: col});
+            } else if (size === 2) {
+                pixelsToPaint.push({r: row, c: col});
+                if (col + 1 < 16) pixelsToPaint.push({r: row, c: col + 1});
+                if (row + 1 < 16) pixelsToPaint.push({r: row + 1, c: col});
+                if (row + 1 < 16 && col + 1 < 16) pixelsToPaint.push({r: row + 1, c: col + 1});
+            } else if (size === 3) {
+                for (let r = row - 1; r <= row + 1; r++) {
+                    for (let c = col - 1; c <= col + 1; c++) {
+                        if (r >= 0 && r < 16 && c >= 0 && c < 16) pixelsToPaint.push({r: r, c: c});
+                    }
+                }
+            }
+            
+            pixelsToPaint.forEach(p => {
+                let idx = p.r * 16 + p.c;
+                currentPixels[idx] = color;
+                let cell = se.children[idx];
+                if (cell) cell.style.backgroundColor = color;
+            });
+            drawOnionSkin();
+        }
+
+        // --- PAPEL DE CEBOLLA ---
+        function drawOnionSkin() {
+            let onionChecked = document.getElementById('onion-skin-chk').checked;
+            let se = document.getElementById('sprite-editor');
+            if(!se) return;
+            
+            for(let i=0; i<256; i++) {
+                let cell = se.children[i];
+                if(cell && currentPixels[i] === 'transparent') cell.style.backgroundColor = 'transparent';
+            }
+            
+            if(onionChecked && globalSprites.length > 0) {
+                try {
+                    let lastArr = globalSprites[globalSprites.length - 1];
+                    if (lastArr && lastArr.length === 256) {
+                        for(let i=0; i<256; i++) {
+                            let cell = se.children[i];
+                            if(cell && currentPixels[i] === 'transparent') {
+                                let color = lastArr[i];
+                                if(color !== 0 && color !== 'transparent') {
+                                    cell.style.backgroundColor = color + "40"; 
+                                }
+                            }
+                        }
+                    }
+                } catch(e) {}
+            }
+        }
+
+        function clearSpriteEditor() { 
+            currentPixels.fill('transparent'); 
+            Array.from(document.getElementById('sprite-editor').children).forEach(p => p.style.backgroundColor = 'transparent');
+            editingSpriteIdx = -1;
+            drawOnionSkin();
+        }
+
+        function loadSpriteToEditor(idx) {
+            editingSpriteIdx = idx;
+            let sArr = globalSprites[idx];
+            if (!sArr || sArr.length !== 256) return;
+            currentPixels = [];
+            let se = document.getElementById('sprite-editor');
+            for (let i = 0; i < 256; i++) {
+                let col = sArr[i];
+                if (col === 0 || col === 'transparent') {
+                    currentPixels.push('transparent');
+                    if (se.children[i]) se.children[i].style.backgroundColor = 'transparent';
+                } else {
+                    currentPixels.push(col);
+                    if (se.children[i]) se.children[i].style.backgroundColor = col;
+                }
+            }
+            drawOnionSkin();
+            printLog("Sprite " + idx + " cargado. Modifica y guarda para actualizar.");
+        }
+
+        function saveSprite() {
+            let sArr = [];
+            let hasPixels = false;
+            for(let i=0; i<256; i++) {
+                if(currentPixels[i] !== 'transparent') {
+                    sArr.push(currentPixels[i]);
+                    hasPixels = true;
+                } else {
+                    sArr.push(0);
+                }
+            }
+            if(hasPixels) {
+                if (editingSpriteIdx >= 0 && editingSpriteIdx < globalSprites.length) {
+                    globalSprites[editingSpriteIdx] = sArr;
+                    printLog("Sprite " + editingSpriteIdx + " actualizado.");
+                    editingSpriteIdx = -1;
+                } else {
+                    globalSprites.push(sArr);
+                    printLog("Sprite Guardado.");
+                }
+                clearSpriteEditor(); refreshSpriteGalleries(); saveProjectToHub(); 
+            } else { showToast("Dibuja algo primero en el lienzo.", "warning"); }
+        }
+        function deleteSelectedSprite() { if(globalSprites.length === 0) return; globalSprites.pop(); refreshSpriteGalleries(); saveProjectToHub(); }
+        
+        function refreshSpriteGalleries() {
+            ['global-sprites', 'logic-sprite-select', 'ui-sprite-select'].forEach(id => {
+                let el = document.getElementById(id); if(!el) return; el.innerHTML = '';
+                if(globalSprites.length === 0 && id !== 'global-sprites') { el.innerHTML = '<span style="color:#666; font-size:11px;">(Vacio)</span>'; return; }
+                globalSprites.forEach((sp, idx) => {
+                    let scx = document.createElement('canvas'); scx.width=16; scx.height=16;
+                    let sdx = scx.getContext('2d');
+                    if(sp && sp.length === 256) {
+                        for(let k=0; k<256; k++) {
+                            if(sp[k] !== 0 && sp[k] !== 'transparent') {
+                                sdx.fillStyle = sp[k];
+                                sdx.fillRect(k%16, Math.floor(k/16), 1, 1);
+                            }
+                        }
+                    }
+                    let img = document.createElement('img'); img.src = scx.toDataURL(); img.className = 'sprite-thumb';
+                    if (id === 'global-sprites') {
+                        img.onclick = () => { loadSpriteToEditor(idx); };
+                    } else if(id === 'logic-sprite-select') {
+                        if(activeSpriteIdx === idx) img.classList.add('selected');
+                        img.onclick = () => { activeSpriteIdx = idx; refreshSpriteGalleries(); };
+                    } else if(id === 'ui-sprite-select') {
+                        if(activeUISpriteIdx === idx) img.classList.add('selected');
+                        img.onclick = () => { activeUISpriteIdx = idx; refreshSpriteGalleries(); };
+                    }
+                    el.appendChild(img);
+                });
+            });
+        }
+
+        // --- UI MAKER ---
+        function createUI() {
+            let name = document.getElementById('ui-create-name').value; if(!name) return;
+            uiCanvasList[name] = []; document.getElementById('ui-create-name').value = '';
+            updateUISelect(); saveProjectToHub();
+        }
+        function updateUISelect() {
+            let sel = document.getElementById('ui-select'); sel.innerHTML = '<option value="">-- Selecciona --</option>';
+            Object.keys(uiCanvasList).forEach(k => sel.innerHTML += `<option value="${k}">${k}</option>`);
+        }
+        function loadUIEditor() {
+            let name = document.getElementById('ui-select').value;
+            document.getElementById('ui-tools').style.display = name ? 'block' : 'none'; renderUIPreview();
+        }
+        function toggleUIElemInput() {
+            let type = document.getElementById('ui-elem-type').value;
+            document.getElementById('ui-elem-text-container').style.display = type === 'text' ? 'block' : 'none';
+            document.getElementById('ui-elem-sprite-container').style.display = type === 'sprite' ? 'block' : 'none';
+        }
+        function addUIElement() {
+            let name = document.getElementById('ui-select').value; if(!name) return;
+            let type = document.getElementById('ui-elem-type').value;
+            let px = document.getElementById('ui-pos-x').value; let py = document.getElementById('ui-pos-y').value; let scale = document.getElementById('ui-scale').value;
+            let elData = { type: type, x: px, y: py, s: scale, val: null };
+            if(type === 'text') elData.val = document.getElementById('ui-elem-text').value || "Texto";
+            if(type === 'sprite') elData.val = activeUISpriteIdx >= 0 ? activeUISpriteIdx : 0;
+            uiCanvasList[name].push(elData); renderUIPreview(); saveProjectToHub();
+        }
+        function renderUIPreview() {
+            let name = document.getElementById('ui-select').value;
+            let prev = document.getElementById('ui-preview-container'); let list = document.getElementById('ui-element-list');
+            prev.innerHTML = ''; list.innerHTML = ''; if(!name) return;
+            uiCanvasList[name].forEach((el, idx) => {
+                list.innerHTML += `<div style="background:#111; padding:5px; margin-bottom:5px; display:flex; justify-content:space-between; align-items:center;"><span>Elemento ${idx} (${el.type})</span><button style="width:auto; background:red; margin:0; padding: 4px 8px;" onclick="uiCanvasList['${name}'].splice(${idx},1); renderUIPreview(); saveProjectToHub();">X</button></div>`;
+                
+                let d;
+                if(el.type === 'text') { 
+                    d = document.createElement('div');
+                    d.className = 'preview-text'; 
+                    d.textContent = el.val; 
+                    d.style.fontSize = `${el.s * 16}px`; 
+                } 
+                else if (globalSprites[el.val]) { 
+                    d = document.createElement('canvas');
+                    d.width = 16; d.height = 16;
+                    let sdx = d.getContext('2d');
+                    let sArr = globalSprites[el.val];
+                    if(sArr && sArr.length === 256) {
+                        for(let k=0; k<256; k++) {
+                            if(sArr[k] !== 0 && sArr[k] !== 'transparent') {
+                                sdx.fillStyle = sArr[k];
+                                sdx.fillRect(k%16, Math.floor(k/16), 1, 1);
+                            }
+                        }
+                    }
+                    d.className = 'preview-sprite'; 
+                    d.style.width = `${el.s * 32}px`; 
+                    d.style.height = `${el.s * 32}px`; 
+                }
+                if(d) {
+                    d.style.position = 'absolute'; d.style.left = `${el.x}%`; d.style.top = `${el.y}%`;
+                    prev.appendChild(d);
+                }
+            });
+        }
+
+        // --- LÓGICA Y BLOQUES ---
+        function toggleEventParamInput() {
+            let type = document.getElementById('new-event-type').value;
+            let cont = document.getElementById('event-param-container');
+            let inp = document.getElementById('new-event-param');
+            if(type === 'keypress') { cont.style.display = 'block'; inp.placeholder = 'Tecla (ej: space, w, e)'; }
+            else if(type === 'broadcast') { cont.style.display = 'block'; inp.placeholder = 'Nombre de Mensaje (ej: LuzOn)'; }
+            else { cont.style.display = 'none'; }
+        }
+
+        function addEventTrigger() {
+            let oId = document.getElementById('edit-obj-select').value;
+            if(!oId) { showToast("Elige un objeto de la lista primero.", "warning"); return; }
+            let type = document.getElementById('new-event-type').value;
+            let param = document.getElementById('new-event-param').value.trim();
+            if(type === 'keypress') param = param.toLowerCase();
+            
+            if (!objects[oId].scripts) objects[oId].scripts = [];
+            
+            let newId = 'evt_' + Math.random().toString(36).substr(2, 9);
+            objects[oId].scripts.push({
+                id: newId,
+                type: type,
+                param: param,
+                blocks: []
+            });
+            
+            document.getElementById('new-event-param').value = '';
+            loadLogic();
+            saveProjectToHub();
+        }
+
+        function deleteEventTrigger(oId, index) {
+            showCustomConfirm("Eliminar Evento", "¿Estás seguro de que quieres eliminar este evento y todos sus bloques lógicos?", () => {
+                objects[oId].scripts.splice(index, 1);
+                loadLogic();
+                saveProjectToHub();
+            });
+        }
+
+        function convertOldScripts(obj) {
+            if (!Array.isArray(obj.scripts)) {
+                let old = obj.scripts || {};
+                obj.scripts = [];
+                Object.keys(old).forEach(type => {
+                    if (old[type] && old[type].length > 0) {
+                        obj.scripts.push({
+                            id: 'evt_' + Math.random().toString(36).substr(2, 9),
+                            type: type,
+                            param: '',
+                            blocks: old[type]
+                        });
+                    }
+                });
+            }
+        }
+
+        function createEntity() {
+            let name = document.getElementById('obj-name').value || 'Entidad'; let physics = document.getElementById('obj-physics').value;
+            objects[nextObjId] = { id: nextObjId, name: name, char: 'X', color: '#ff00aa', physics: physics, spriteIdx: activeSpriteIdx, scripts: [] };
+            nextObjId++; updateObjSelect(); updatePalette(); document.getElementById('obj-name').value = ''; activeSpriteIdx = -1; refreshSpriteGalleries(); saveProjectToHub();
+        }
+
+        function updateObjSelect() {
+            let select = document.getElementById('edit-obj-select'); let currentVal = select.value;
+            select.innerHTML = '<option value="">-- Elige Objeto o Jugador (@) --</option>';
+            Object.values(objects).forEach(o => { if(o.id > 0) select.innerHTML += `<option value="${o.id}">${o.name}</option>`; });
+            if(currentVal && objects[currentVal]) select.value = currentVal; loadLogic();
+        }
+
+        function moveBlock(oId, scrIdx, idx, dir) {
+            let arr = objects[oId].scripts[scrIdx].blocks;
+            if (idx + dir < 0 || idx + dir >= arr.length) return; 
+            let temp = arr[idx]; arr[idx] = arr[idx + dir]; arr[idx + dir] = temp;
+            loadLogic(); saveProjectToHub();
+        }
+
+        const B_CONF = {
+            'shoot_ray': { txt: '🔫 Disparar Rayo Hitscan', cl: 'b-player', inp: false },
+            'give_ammo': { txt: 'Dar Munición', cl: 'b-player', inp: true },
+            'heal_hp': { txt: 'Curar Vida', cl: 'b-player', inp: true },
+            'set_speed': { txt: 'Fijar Vel. Entidad (Base 1)', cl: 'b-var', inp: true },
+            'add_score': { txt: 'Sumar Puntuación', cl: 'b-var', inp: true },
+            'set_var': { txt: 'Fijar Var (Nom,Val)', cl: 'b-var', inp: true },
+            'add_var': { txt: 'Sumar Var (Nom,Val)', cl: 'b-var', inp: true },
+            'multiply_var': { txt: 'Multiplicar Var (Nom,Val)', cl: 'b-var', inp: true },
+            'toggle_var': { txt: 'Alternar Var (0/1)', cl: 'b-var', inp: true },
+            'teleport': { txt: 'Teleportar a (X,Y)', cl: 'b-move', inp: true },
+            'bounce': { txt: 'Rebotar (Invertir)', cl: 'b-move', inp: false },
+            'chase': { txt: 'IA: Perseguir al Jugador', cl: 'b-move', inp: false },
+            'chase_shoot': { txt: 'IA: Enemigo Dispara Rayo', cl: 'b-move', inp: false },
+            'move_rand': { txt: 'IA: Mover Aleatorio', cl: 'b-move', inp: false },
+            'move_fw': { txt: 'Mover Hacia Adelante', cl: 'b-move', inp: true },
+            'move_x': { txt: 'Mover X (Vel)', cl: 'b-move', inp: true },
+            'move_y': { txt: 'Mover Y (Vel)', cl: 'b-move', inp: true },
+            'show_ui': { txt: 'Mostrar UI (Nombre)', cl: 'b-look', inp: true },
+            'hide_ui': { txt: 'Ocultar Todas las UIs', cl: 'b-look', inp: false },
+            'set_sprite': { txt: 'Cambiar a Sprite (ID)', cl: 'b-look', inp: true },
+            'sound': { txt: 'Sonido (pew/hurt/coin/jump)', cl: 'b-look', inp: true },
+            'shake': { txt: 'Temblor de Pantalla', cl: 'b-look', inp: false },
+            'set_sky': { txt: 'Color Cielo (Hex)', cl: 'b-look', inp: true },
+            'set_floor': { txt: 'Color Suelo (Hex)', cl: 'b-look', inp: true },
+            'set_block': { txt: '🧱 Cambiar Muro (X,Y,ID):', cl: 'b-system', inp: true },
+            'send_msg': { txt: '📢 Enviar Mensaje:', cl: 'b-system', inp: true },
+            'if_var_msg': { txt: '❓ Si Var [Nom,op,Val] -> Msg:', cl: 'b-system', inp: true },
+            'load_level': { txt: '🚪 Cargar Nivel', cl: 'b-system', inp: true },
+            'set_fog': { txt: 'Fijar Niebla (Dist)', cl: 'b-system', inp: true },
+            'wait': { txt: '⏳ Esperar (seg)', cl: 'b-system', inp: true },
+            'stop_script': { txt: '🛑 Detener Código Aquí', cl: 'b-system', inp: false },
+            'chance_stop': { txt: '🎲 50% de Detener Código', cl: 'b-system', inp: false },
+            'damage': { txt: 'Dañar Jugador', cl: 'b-system', inp: true },
+            'spawn': { txt: 'Invocar Entidad (ID Num)', cl: 'b-system', inp: true },
+            'destroy': { txt: 'Morir / Destruir Objeto', cl: 'b-combat', inp: false },
+            'win': { txt: 'Ganar el Nivel', cl: 'b-combat', inp: false },
+            'print': { txt: 'Imprimir Log', cl: 'b-system', inp: true }
+        };
+
+        let dragD = null;
+        function dragS(ev, type) { let inp = ev.target.querySelector('input'); dragD = { type: type, val: inp ? inp.value : null }; }
+        function allowD(ev) { ev.preventDefault(); ev.currentTarget.classList.add('drag-over'); }
+        function leaveD(ev) { ev.currentTarget.classList.remove('drag-over'); }
+        
+        function dropB(ev, scrId) {
+            ev.preventDefault(); ev.currentTarget.classList.remove('drag-over');
+            let oId = document.getElementById('edit-obj-select').value; if(!oId || !dragD) return;
+            
+            let scr = objects[oId].scripts.find(s => s.id === scrId);
+            if(scr) { scr.blocks.push({ type: dragD.type, val: dragD.val }); }
+            dragD = null; loadLogic(); saveProjectToHub();
+        }
+
+        function loadLogic() {
+            let oId = document.getElementById('edit-obj-select').value;
+            if(!oId) { document.getElementById('workspace').style.display = 'none'; return; }
+            document.getElementById('workspace').style.display = 'block';
+            
+            let ws = document.getElementById('workspace');
+            ws.innerHTML = ''; 
+
+            let obj = objects[oId];
+            if (!obj.scripts) obj.scripts = [];
+            convertOldScripts(obj);
+
+            if (obj.scripts.length === 0) {
+                ws.innerHTML = '<p style="color:#666; font-size:12px; text-align:center; padding:20px;">Este objeto no tiene bloques de evento. ¡Crea uno a la izquierda!</p>';
+                return;
+            }
+
+            obj.scripts.forEach((scr, scrIdx) => {
+                let container = document.createElement('div');
+                container.className = 'event-container';
+                
+                let hatColor = 'var(--c-start)';
+                let label = '';
+                if(scr.type === 'start') { hatColor = 'var(--c-start)'; label = '🏁 Al iniciar el Nivel (Start)'; }
+                else if(scr.type === 'click') { hatColor = 'var(--c-click)'; label = '🖱️ Al Hacer Clic'; }
+                else if(scr.type === 'hit') { hatColor = 'var(--c-hit)'; label = '🎯 Al Recibir Hitscan'; }
+                else if(scr.type === 'collide') { hatColor = 'var(--c-collide)'; label = '🟡 Al tocar al Jugador (Colisión)'; }
+                else if(scr.type === 'update') { hatColor = 'var(--c-update)'; label = '🟢 Por siempre (Bucle 60fps Async)'; }
+                else if(scr.type === 'keypress') { hatColor = '#9933ff'; label = '⌨️ Al pulsar tecla: [' + scr.param.toUpperCase() + ']'; }
+                else if(scr.type === 'broadcast') { hatColor = 'var(--c-msg)'; label = '📢 Al recibir Mensaje: [' + scr.param + ']'; }
+
+                container.innerHTML = `
+                    <div class="event-hat" style="background:${hatColor}; display:flex; justify-content:space-between; align-items:center;">
+                        <span>${label}</span>
+                        <button class="btn-block-action del" onclick="deleteEventTrigger(${oId}, ${scrIdx})" style="background:transparent; border:none; color:white; font-size:14px; cursor:pointer; font-weight:bold;">X</button>
+                    </div>
+                    <div class="dropzone" id="dz-${scr.id}" ondragover="allowD(event)" ondragleave="leaveD(event)" ondrop="dropB(event, '${scr.id}')"></div>
+                `;
+                ws.appendChild(container);
+
+                let dz = container.querySelector('.dropzone');
+                scr.blocks.forEach((b, idx) => {
+                    let conf = B_CONF[b.type];
+                    if(!conf) return; 
+                    
+                    let div = document.createElement('div');
+                    div.className = `visual-block workspace-block ${conf.cl}`;
+                    let inputStyle = (b.type === 'if_var_msg' || b.type === 'if_var' || b.type === 'set_block') ? 'width: 110px;' : '';
+                    if (b.type === 'set_sky' || b.type === 'set_floor') {
+                        let h = `<span>${conf.txt}</span> <input type="color" value="${b.val || '#000000'}" style="width:60px; height:22px; padding:0;" onchange="objects[${oId}].scripts[${scrIdx}].blocks[${idx}].val = this.value; saveProjectToHub();">`;
+                        h += `<div style="display:flex; gap:2px; margin-left:auto;"><button class="btn-block-action" onclick="moveBlock(${oId}, ${scrIdx}, ${idx}, -1)">↑</button><button class="btn-block-action" onclick="moveBlock(${oId}, ${scrIdx}, ${idx}, 1)">↓</button><button class="btn-block-action del" onclick="objects[${oId}].scripts[${scrIdx}].blocks.splice(${idx}, 1); loadLogic(); saveProjectToHub();">X</button></div>`;
+                        div.innerHTML = h;
+                    } else {
+                        let h = `<span>${conf.txt}</span> `; if(conf.inp) h += `<input type="text" value="${b.val}" style="${inputStyle}" onchange="objects[${oId}].scripts[${scrIdx}].blocks[${idx}].val = this.value; saveProjectToHub();">`;
+                        h += `<div style="display:flex; gap:2px; margin-left:auto;"><button class="btn-block-action" onclick="moveBlock(${oId}, ${scrIdx}, ${idx}, -1)">↑</button><button class="btn-block-action" onclick="moveBlock(${oId}, ${scrIdx}, ${idx}, 1)">↓</button><button class="btn-block-action del" onclick="objects[${oId}].scripts[${scrIdx}].blocks.splice(${idx}, 1); loadLogic(); saveProjectToHub();">X</button></div>`;
+                        div.innerHTML = h;
+                    }
+                    dz.appendChild(div);
+                });
+            });
+        }
+
+        // --- CONTROLES DE MOVIMIENTO Y GIRO ---
+        window.onkeydown = e => {
+            let keyName = e.key.toLowerCase();
+            keys[keyName] = true;
+            if(isPlaying && player.alive) {
+                triggerEvent(getPlayerEntData(), 'keypress', keyName);
+                activeEntities.forEach(ent => {
+                    if(!ent.dead) triggerEvent(ent, 'keypress', keyName);
+                });
+            }
+        };
+        window.onkeyup = e => keys[e.key.toLowerCase()] = false;
+
+        let isDraggingCam = false;
+        let lastDragX = 0;
+
+        // Clic para bloquear cursor si es raycaster, o iniciar arrastre manual
+        document.getElementById('gameContainer').addEventListener('mousedown', (e) => {
+            if(!isPlaying || !player.alive) return;
+            if(document.getElementById('engine-cam').value === 'raycaster') {
+                document.getElementById('gameContainer').requestPointerLock();
+            }
+            isDraggingCam = true;
+            lastDragX = e.clientX;
+            
+            triggerEvent(getPlayerEntData(), 'click');
+            activeEntities.forEach(ent => triggerEvent(ent, 'click'));
+        });
+
+        // Movimiento de cámara robusto (Soporta PointerLock Y arrastre manual para Iframes/Sandboxes)
+        window.addEventListener('mousemove', e => {
+            if(isPlaying && player.alive) {
+                if (document.pointerLockElement) {
+                    player.angle += e.movementX * engineConfig.pTurn;
+                } else if (isDraggingCam) {
+                    let deltaX = e.clientX - lastDragX;
+                    player.angle += deltaX * 0.007; // Sensibilidad de arrastre
+                    lastDragX = e.clientX;
+                }
+            }
+        });
+
+        window.addEventListener('mouseup', () => {
+            isDraggingCam = false;
+        });
+
+        function getPlayerEntData() {
+            if(!player.isBusy) player.isBusy = {};
+            return {
+                get tx() { return player.x; }, set tx(v) { player.x = v; },
+                get ty() { return player.y; }, set ty(v) { player.y = v; },
+                templateId: 1, isBusy: player.isBusy, get dead() { return !player.alive; }, speedMult: 1, overSprite: -1
+            };
+        }
+
+        function togglePlay() {
+            let btn = document.getElementById('btn-play');
+            if(isPlaying) {
+                isPlaying = false; cancelAnimationFrame(gameLoop); document.exitPointerLock();
+                btn.innerHTML = '▶ INICIAR JUEGO'; btn.style.background = 'var(--accent2)';
+                
+                levels = JSON.parse(JSON.stringify(backupLevels));
+                map = JSON.parse(JSON.stringify(backupMap)); 
+                activeEntities = []; 
+                activeUIName = null;
+                document.getElementById('ui-overlay').innerHTML = ''; refreshGridVisuals();
+            } else {
+                isPlaying = true; btn.innerHTML = '⏹ DETENER'; btn.style.background = 'var(--accent)';
+                
+                levels[activeLevelName] = JSON.parse(JSON.stringify(map));
+                backupLevels = JSON.parse(JSON.stringify(levels));
+                backupMap = JSON.parse(JSON.stringify(map));
+                startGame();
+            }
+        }
+
+        function startGame() {
+            updateEngineConfig();
+            player = { x: 2, y: 2, vx: 0, vy: 0, angle: 0, speed: engineConfig.pSpeed, hp: 100, ammo: 0, score: 0, alive: true, isBusy: {}, customVars: {} };
+            activeEntities = []; document.getElementById('ui-overlay').innerHTML = '';
+            activeUIName = null;
+            
+            for(let y=0; y<ROWS; y++) {
+                for(let x=0; x<COLS; x++) {
+                    let tid = map[y][x];
+                    if(tid === 1) { player.x = x + 0.5; player.y = y + 0.5; map[y][x] = 0; } 
+                    else if (tid > 1 && objects[tid] && objects[tid].physics === 'trigger') {
+                        activeEntities.push({ tx: x + 0.5, ty: y + 0.5, templateId: tid, dead: false, isBusy: {}, speedMult: 1, overSprite: -1, dir: 0 });
+                        map[y][x] = 0; 
+                    }
+                }
+            }
+            updateHUD();
+            
+            triggerEvent(getPlayerEntData(), 'start');
+            activeEntities.forEach(ent => triggerEvent(ent, 'start'));
+
+            loop();
+        }
+
+        function updateHUD() { 
+            document.getElementById('stats-hp').innerText = player.hp;
+            document.getElementById('stats-ammo').innerText = player.ammo; 
+            document.getElementById('stats-score').innerText = player.score; 
+        }
+
+        function refreshRuntimeUI() {
+            if (!isPlaying || !activeUIName) return;
+            let ui = uiCanvasList[activeUIName];
+            if (!ui) return;
+            let ov = document.getElementById('ui-overlay');
+            let texts = ov.querySelectorAll('.preview-text');
+            let textElements = ui.filter(el => el.type === 'text');
+            textElements.forEach((el, index) => {
+                let htmlEl = texts[index];
+                if (htmlEl) {
+                    let pt = el.val.replace(/{([^}]+)}/g, (match, vName) => {
+                        if(vName === 'HP') return player.hp;
+                        if(vName === 'AMMO') return player.ammo;
+                        if(vName === 'SCORE') return player.score;
+                        return player.customVars[vName] !== undefined ? player.customVars[vName] : match;
+                    });
+                    htmlEl.textContent = pt;
+                }
+            });
+        }
+
+        async function triggerEvent(entData, eventType, extraParam = '') {
+            let obj = objects[entData.templateId];
+            if (!obj || !obj.scripts) return;
+            for (let i = 0; i < obj.scripts.length; i++) {
+                let scr = obj.scripts[i];
+                if (scr.type === eventType) {
+                    if (eventType === 'keypress' && scr.param !== extraParam) continue;
+                    if (eventType === 'broadcast' && scr.param !== extraParam) continue;
+                    runScript(scr.blocks, entData, scr.id);
+                }
+            }
+        }
+
+        async function runScript(scripts, entData, eType) {
+            if(!scripts || scripts.length === 0 || !isPlaying) return;
+            if(!entData.isBusy) entData.isBusy = {};
+            if(eType && entData.isBusy[eType]) return;
+            if(eType) entData.isBusy[eType] = true;
+
+            for(let i=0; i<scripts.length; i++) {
+                if(!isPlaying || entData.dead && eType !== 'destroy') break;
+                let b = scripts[i]; let vStr = b.val; let vNum = parseFloat(vStr) || 0; 
+
+                if(b.type === 'wait') { await new Promise(resolve => setTimeout(resolve, vNum * 1000)); continue; }
+                if(b.type === 'stop_script') { break; } 
+                if(b.type === 'chance_stop') { if(Math.random() < 0.5) break; }
+                if(b.type === 'set_fog') { engineConfig.fogDist = vNum; }
+
+                if(b.type === 'print') printLog(`[${objects[entData.templateId].name}]: ${vStr}`);
+                if(b.type === 'kill') { player.hp = 0; }
+                if(b.type === 'destroy') { entData.dead = true; }
+                if(b.type === 'win') { player.alive = false; document.getElementById('ui-overlay').innerHTML = '<h1 style="color:#0f0; text-align:center; font-size:50px; margin-top:200px; text-shadow:2px 2px #000; font-family:sans-serif;">VICTORIA</h1>'; }
+                if(b.type === 'add_score') { player.score += vNum; updateHUD(); }
+                if(b.type === 'give_ammo') { player.ammo += vNum; updateHUD(); }
+                if(b.type === 'heal_hp') { player.hp = Math.min(100, player.hp + vNum); updateHUD(); }
+                if(b.type === 'damage') { player.hp -= vNum; updateHUD(); playSfx('hurt'); }
+                if(b.type === 'sound') { playSfx(vStr); }
+                if(b.type === 'set_speed') { if(entData.templateId === 1) player.speed = vNum * 0.1; else entData.speedMult = vNum; }
+                if(b.type === 'set_sprite') { entData.overSprite = Math.floor(vNum); }
+                
+                // NUEVO BLOQUE: set_block (Cambiar Muro)
+                if(b.type === 'set_block') {
+                    let parts = vStr.split(',');
+                    if (parts.length >= 3) {
+                        let mx = parseInt(parts[0]);
+                        let my = parseInt(parts[1]);
+                        let mId = parseInt(parts[2]);
+                        if (my >= 0 && my < ROWS && mx >= 0 && mx < COLS) {
+                            map[my][mx] = mId;
+                        }
+                    }
+                }
+                
+                // SISTEMA DE VARIABLES CUSTOM
+                if(b.type === 'set_var') { let p = vStr.split(','); if(p.length===2) player.customVars[p[0].trim()] = parseFloat(p[1])||0; }
+                if(b.type === 'add_var') { let p = vStr.split(','); if(p.length===2) { let n = p[0].trim(); player.customVars[n] = (player.customVars[n]||0) + (parseFloat(p[1])||0); } }
+                if(b.type === 'multiply_var') { let p = vStr.split(','); if(p.length===2) { let n = p[0].trim(); player.customVars[n] = (player.customVars[n]||0) * (parseFloat(p[1])||1); } }
+                if(b.type === 'toggle_var') { player.customVars[vStr.trim()] = (player.customVars[vStr.trim()] === 1) ? 0 : 1; }
+                if(b.type === 'teleport') { let coords = vStr.split(','); if(coords.length === 2) { entData.tx = parseFloat(coords[0]); entData.ty = parseFloat(coords[1]); if(entData.templateId === 1) { player.x = entData.tx; player.y = entData.ty; } } }
+                if(b.type === 'bounce') { if(entData.templateId !== 1) entData.dir += Math.PI; else player.angle += Math.PI; }
+                if(b.type === 'set_sky') engineConfig.skyColor = vStr;
+                if(b.type === 'set_floor') engineConfig.floorColor = vStr;
+
+                if(b.type === 'send_msg') {
+                    let msg = vStr.trim();
+                    triggerEvent(getPlayerEntData(), 'broadcast', msg);
+                    activeEntities.forEach(ent => triggerEvent(ent, 'broadcast', msg));
+                }
+
+                if(b.type === 'if_var_msg') {
+                    let p = vStr.split(',');
+                    if(p.length >= 4) {
+                        let varName = p[0].trim();
+                        let op = p[1].trim();
+                        let checkVal = parseFloat(p[2].trim()) || 0;
+                        let msg = p[3].trim();
+                        let curVal = player.customVars[varName] !== undefined ? player.customVars[varName] : 0;
+                        let conditionMet = false;
+                        if (op === '==') conditionMet = (curVal == checkVal);
+                        else if (op === '>') conditionMet = (curVal > checkVal);
+                        else if (op === '<') conditionMet = (curVal < checkVal);
+                        else if (op === '!=') conditionMet = (curVal != checkVal);
+                        if (conditionMet) {
+                            triggerEvent(getPlayerEntData(), 'broadcast', msg);
+                            activeEntities.forEach(ent => triggerEvent(ent, 'broadcast', msg));
+                        }
+                    }
+                }
+
+                if(b.type === 'spawn') {
+                    let spawnId = Math.floor(vNum);
+                    if(objects[spawnId] && objects[spawnId].physics === 'trigger') {
+                        activeEntities.push({ tx: entData.tx, ty: entData.ty, templateId: spawnId, dead: false, isBusy: {}, speedMult: 1, overSprite: -1, dir: 0 });
+                    }
+                }
+
+                if(b.type === 'load_level') {
+                    let lvlName = vStr.trim();
+                    if(levels[lvlName]) {
+                        printLog("Cargando nivel: " + lvlName);
+                        activeLevelName = lvlName;
+                        map = JSON.parse(JSON.stringify(levels[lvlName]));
+                        let foundSpawn = false;
+                        for(let y=0; y<ROWS; y++) {
+                            for(let x=0; x<COLS; x++) {
+                                if(map[y][x] === 1) { player.x = x + 0.5; player.y = y + 0.5; map[y][x] = 0; foundSpawn = true; }
+                            }
+                        }
+                        if(!foundSpawn) { player.x = 2.5; player.y = 2.5; }
+                        activeEntities = [];
+                        for(let y=0; y<ROWS; y++) {
+                            for(let x=0; x<COLS; x++) {
+                                let tid = map[y][x];
+                                if(tid > 1 && objects[tid] && objects[tid].physics === 'trigger') {
+                                    activeEntities.push({ tx: x + 0.5, ty: y + 0.5, templateId: tid, dead: false, isBusy: {}, speedMult: 1, overSprite: -1, dir: 0 });
+                                    map[y][x] = 0;
+                                }
+                            }
+                        }
+                        triggerEvent(getPlayerEntData(), 'start');
+                        activeEntities.forEach(ent => triggerEvent(ent, 'start'));
+                        updateHUD();
+                    } else {
+                        printLog("Error: Nivel '" + lvlName + "' no existe.");
+                    }
+                }
+
+                if(b.type === 'hide_ui') { document.getElementById('ui-overlay').innerHTML = ''; activeUIName = null; }
+                if(b.type === 'shake') {
+                    let gc = document.getElementById('gameContainer'); gc.style.transform = 'translate(10px, 10px)';
+                    setTimeout(() => gc.style.transform = 'none', 100);
+                }
+                if(b.type === 'show_ui') {
+                    let ui = uiCanvasList[vStr];
+                    if(ui) {
+                        activeUIName = vStr;
+                        let ov = document.getElementById('ui-overlay');
+                        Array.from(ov.querySelectorAll(`[data-ui-name="${vStr}"]`)).forEach(e => e.remove());
+                        ui.forEach(el => {
+                            let d;
+                            if(el.type === 'text') {
+                                d = document.createElement('div');
+                                d.className = 'preview-text'; 
+                                let pt = el.val.replace(/{([^}]+)}/g, (match, vName) => {
+                                    if(vName === 'HP') return player.hp;
+                                    if(vName === 'AMMO') return player.ammo;
+                                    if(vName === 'SCORE') return player.score;
+                                    return player.customVars[vName] !== undefined ? player.customVars[vName] : match;
+                                });
+                                d.textContent = pt; 
+                                d.style.fontSize = (el.s * 16) + 'px'; 
+                            } 
+                            else if (globalSprites[el.val]) { 
+                                d = document.createElement('canvas');
+                                d.width = 16; d.height = 16;
+                                let sdx = d.getContext('2d');
+                                let sArr = globalSprites[el.val];
+                                if(sArr && sArr.length === 256) {
+                                    for(let k=0; k<256; k++) {
+                                        if(sArr[k] !== 0 && sArr[k] !== 'transparent') {
+                                            sdx.fillStyle = sArr[k];
+                                            sdx.fillRect(k%16, Math.floor(k/16), 1, 1);
+                                        }
+                                    }
+                                }
+                                d.className = 'preview-sprite'; 
+                                d.style.width = (el.s * 32) + 'px'; 
+                                d.style.height = (el.s * 32) + 'px'; 
+                            }
+                            if(d) {
+                                d.style.position = 'absolute'; d.style.left = el.x + '%'; d.style.top = el.y + '%';
+                                d.setAttribute('data-ui-name', vStr);
+                                ov.appendChild(d);
+                            }
+                        });
+                    }
+                }
+                if(b.type === 'shoot_ray') {
+                    if(player.ammo <= 0) {} else {
+                        player.ammo--; playSfx('pew'); updateHUD();
+                        let hitE = null;
+                        for(let j=0; j<activeEntities.length; j++) {
+                            let e = activeEntities[j]; if(e.dead) continue;
+                            let ang = Math.atan2(e.ty - player.y, e.tx - player.x) - player.angle;
+                            while(ang < -Math.PI) ang += 2*Math.PI; while(ang > Math.PI) ang -= 2*Math.PI;
+                            if(Math.abs(ang) < 0.2) { hitE = e; break; }
+                        } 
+                        if(hitE) triggerEvent(hitE, 'hit');
+                    }
+                }
+                if(entData.templateId !== 1) { 
+                    let spd = (entData.speedMult || 1) * 0.03;
+                    if(b.type === 'chase') {
+                        let dx = player.x - entData.tx, dy = player.y - entData.ty; let dist = Math.sqrt(dx*dx + dy*dy);
+                        if(dist > 0.4) { 
+                            let nx = entData.tx + (dx/dist)*spd; let ny = entData.ty + (dy/dist)*spd;
+                            if(getObjAt(nx, ny).physics !== 'solid') { entData.tx = nx; entData.ty = ny; }
+                        }
+                    }
+                    if(b.type === 'chase_shoot') {
+                        if(Math.random() < 0.02) { playSfx('pew'); player.hp -= 5; updateHUD(); }
+                    }
+                    if(b.type === 'move_rand') {
+                        if(Math.random() < 0.05) entData.dir = Math.random() * Math.PI * 2;
+                        let nx = entData.tx + Math.cos(entData.dir)*spd; let ny = entData.ty + Math.sin(entData.dir)*spd;
+                        if(getObjAt(nx, ny).physics !== 'solid') { entData.tx = nx; entData.ty = ny; }
+                    }
+                    if(b.type === 'move_fw') { 
+                        let nx = entData.tx + Math.cos(entData.dir)*(vNum*0.05); let ny = entData.ty + Math.sin(entData.dir)*(vNum*0.05);
+                        if(getObjAt(nx, ny).physics !== 'solid') { entData.tx = nx; entData.ty = ny; }
+                    }
+                    if(b.type === 'move_x') { let nx = entData.tx + (vNum * 0.05); if(getObjAt(nx, entData.ty).physics !== 'solid') entData.tx = nx; }
+                    if(b.type === 'move_y') { let ny = entData.ty + (vNum * 0.05); if(getObjAt(entData.tx, ny).physics !== 'solid') entData.ty = ny; }
+                }
+            }
+            if(eType && entData) entData.isBusy[eType] = false;
+        }
+
+        function getObjAt(x, y) {
+            let cx = Math.floor(x), cy = Math.floor(y);
+            if(cx<0 || cx>=COLS || cy<0 || cy>=ROWS) return objects[2]; return objects[map[cy][cx]];
+        }
+
+        function loop() {
+            if(!isPlaying) return;
+            if(player.hp <= 0 && player.alive) { player.alive = false; document.getElementById('ui-overlay').innerHTML = '<h1 style="color:#f00; text-align:center; font-size:50px; margin-top:200px; text-shadow:2px 2px #000; font-family:sans-serif;">GAME OVER</h1>'; }
+            if(!player.alive) { ctx.fillStyle = 'rgba(255,0,0,0.2)'; ctx.fillRect(0,0,800,480); return; }
+
+            triggerEvent(getPlayerEntData(), 'update');
+            activeEntities.forEach(ent => {
+                if(!ent.dead) {
+                    triggerEvent(ent, 'update');
+                    let dist = Math.sqrt(Math.pow(ent.tx - player.x, 2) + Math.pow(ent.ty - player.y, 2));
+                    if(dist < 0.6) triggerEvent(ent, 'collide');
+                }
+            });
+            activeEntities = activeEntities.filter(ent => !ent.dead);
+
+            // Giro alternativo continuo por teclado en el editor
+            if(keys['arrowleft'] || keys['q']) { player.angle -= 0.045; }
+            if(keys['arrowright'] || keys['e']) { player.angle += 0.045; }
+
+            let dx = Math.cos(player.angle)*player.speed; let dy = Math.sin(player.angle)*player.speed;
+            let sx = Math.cos(player.angle - Math.PI/2)*player.speed; let sy = Math.sin(player.angle - Math.PI/2)*player.speed;
+            
+            if(keys['w']) { if(getObjAt(player.x+dx, player.y).physics !== 'solid') player.x += dx; if(getObjAt(player.x, player.y+dy).physics !== 'solid') player.y += dy; }
+            if(keys['s']) { if(getObjAt(player.x-dx, player.y).physics !== 'solid') player.x -= dx; if(getObjAt(player.x, player.y-dy).physics !== 'solid') player.y -= dy; }
+            if(keys['a']) { if(getObjAt(player.x+sx, player.y).physics !== 'solid') player.x += sx; if(getObjAt(player.x, player.y+sy).physics !== 'solid') player.y += sy; }
+            if(keys['d']) { if(getObjAt(player.x-sx, player.y).physics !== 'solid') player.x -= sx; if(getObjAt(player.x, player.y-sy).physics !== 'solid') player.y -= sy; }
+
+            ctx.fillStyle = '#0a0a0a'; ctx.fillRect(0,0,800,480);
+            render3D();
+            refreshRuntimeUI();
+
+            gameLoop = requestAnimationFrame(loop);
+        }
+
+        function render3D() {
+            const fov = Math.PI/3; const rays = 320; const strW = 800/rays; let zBuf = new Array(rays).fill(0);
+            ctx.fillStyle = engineConfig.skyColor; ctx.fillRect(0, 0, 800, 240);
+            ctx.fillStyle = engineConfig.floorColor; ctx.fillRect(0, 240, 800, 240);
+
+            for(let i=0; i<rays; i++) {
+                let rAng = (player.angle - fov/2) + (i/rays)*fov; let ex = Math.cos(rAng), ey = Math.sin(rAng);
+                let dist = 0, hit = false, cObj = null;
+                while(!hit && dist < 50) {
+                    dist += 0.05; let tx = Math.floor(player.x + ex*dist), ty = Math.floor(player.y + ey*dist);
+                    if(tx<0||tx>=COLS||ty<0||ty>=ROWS) { hit = true; dist = 50; }
+                    else if(map[ty][tx] > 0) { hit = true; cObj = objects[map[ty][tx]]; }
+                }
+                if(hit) {
+                    let corr = dist * Math.cos(rAng - player.angle); zBuf[i] = corr;
+                    let wH = 480 / corr; let dY = 240 - wH/2;
+                    let fogLvl = Math.min(dist / engineConfig.fogDist, 1.0);
+
+                    if(cObj && cObj.spriteIdx >= 0 && globalSprites[cObj.spriteIdx]) {
+                        let hX = player.x + ex*dist, hY = player.y + ey*dist; let wX = hX % 1;
+                        if(Math.abs(hY%1 - 1)<0.05 || Math.abs(hY%1)<0.05) wX = hX%1; else wX = hY%1;
+                        let tx = Math.floor(wX * 16);
+                        
+                        let sArr = globalSprites[cObj.spriteIdx];
+                        let drawX = i*strW;
+                        for(let yP=0; yP<16; yP++) {
+                            let color = sArr[yP*16 + tx];
+                            if(color !== 0 && color !== 'transparent') {
+                                ctx.fillStyle = color;
+                                ctx.fillRect(drawX, dY + (yP * wH/16), strW+1, wH/16 + 1);
+                                if (fogLvl > 0) {
+                                    ctx.fillStyle = `rgba(0,0,0,${fogLvl})`;
+                                    ctx.fillRect(drawX, dY + (yP * wH/16), strW+1, wH/16 + 1);
+                                }
+                            }
+                        }
+                    } else if (cObj) {
+                        ctx.fillStyle = cObj.color;
+                        ctx.fillRect(i*strW, dY, strW+1, wH);
+                        if (fogLvl > 0) {
+                            ctx.fillStyle = `rgba(0,0,0,${fogLvl})`;
+                            ctx.fillRect(i*strW, dY, strW+1, wH);
+                        }
+                    }
+                }
+            }
+
+            let sorted = [...activeEntities].sort((a,b) => (Math.pow(b.tx-player.x,2)+Math.pow(b.ty-player.y,2)) - (Math.pow(a.tx-player.x,2)+Math.pow(a.ty-player.y,2)));
+            sorted.forEach(ent => {
+                let dx = ent.tx - player.x, dy = ent.ty - player.y; let dist = Math.sqrt(dx*dx + dy*dy);
+                let ang = Math.atan2(dy, dx) - player.angle;
+                while(ang < -Math.PI) ang += 2*Math.PI; while(ang > Math.PI) ang -= 2*Math.PI;
+                if (Math.abs(ang) < fov) {
+                    let corr = dist * Math.cos(ang);
+                    let scX = (0.5 * (ang / (fov/2)) + 0.5) * rays;
+                    let sH = (480 / corr) * 1.35;
+                    let sW = sH;
+                    let obj = objects[ent.templateId];
+                    let sId = ent.overSprite >= 0 ? ent.overSprite : obj.spriteIdx;
+                    let fogLvl = Math.min(dist / engineConfig.fogDist, 1.0);
+                    
+                    let drawX = (scX * strW) - sW/2;
+                    let drawY = 240 - sH/2;
+
+                    for (let stripe = 0; stripe < sW; stripe++) {
+                        let rayIdx = Math.floor((drawX + stripe) / strW);
+                        if (rayIdx >= 0 && rayIdx < rays) {
+                            if (dist < zBuf[rayIdx]) {
+                                let texX = Math.floor((stripe / sW) * 16);
+                                if (sId >= 0 && globalSprites[sId]) {
+                                    let sArr = globalSprites[sId];
+                                    for(let yP=0; yP<16; yP++) {
+                                        let color = sArr[yP*16 + texX];
+                                        if(color !== 0 && color !== 'transparent') {
+                                            ctx.fillStyle = color;
+                                            ctx.fillRect(drawX + stripe, drawY + (yP * sH/16), 1, sH/16 + 1);
+                                            if (fogLvl > 0) {
+                                                ctx.fillStyle = `rgba(0,0,0,${fogLvl})`;
+                                                ctx.fillRect(drawX + stripe, drawY + (yP * sH/16), 1, sH/16 + 1);
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    ctx.fillStyle = obj.color;
+                                    ctx.fillRect(drawX + stripe, drawY, 1, sH);
+                                    if (fogLvl > 0) {
+                                        ctx.fillStyle = `rgba(0,0,0,${fogLvl})`;
+                                        ctx.fillRect(drawX + stripe, drawY, 1, sH);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            ctx.fillStyle = 'rgba(0,255,204,0.5)'; ctx.fillRect(400-2, 240-2, 4, 4);
+        }
+
+        async function init() { 
+            let splash = document.getElementById('splash');
+            if (splash) {
+                setTimeout(() => { splash.style.opacity = 0; setTimeout(() => splash.remove(), 1000); }, 2000);
+            }
+
+            for(let y=0; y<ROWS; y++) {
+                for(let x=0; x<COLS; x++) {
+                    let tid = map[y][x];
+                    if(tid === 1) {
+                        player.x = x + 0.5; player.y = y + 0.5; map[y][x] = 0;
+                    } else if (tid > 1 && objects[tid] && objects[tid].physics === 'trigger') {
+                        activeEntities.push({ tx: x + 0.5, ty: y + 0.5, templateId: tid, dead: false, isBusy: {}, speedMult: 1, overSprite: -1, dir: 0 });
+                        map[y][x] = 0;
+                    }
+                }
+            }
+            triggerEvent(getPlayerEntData(), 'start');
+            activeEntities.forEach(ent => triggerEvent(ent, 'start'));
+            loop();
+        }
+
+        function getProjectJSONRawObj() {
+            if (activeLevelName) {
+                levels[activeLevelName] = JSON.parse(JSON.stringify(map));
+            }
+            return {
+                levels: levels,
+                activeLevelName: activeLevelName,
+                objects: objects,
+                uiCanvasList: uiCanvasList,
+                spritesRaw: globalSprites, 
+                engineConfig: engineConfig
+            };
+        }
+
+        function exportProjectJSON() {
+            let pj = getProjectJSONRawObj();
+            let formattedJSON = JSON.stringify(pj, null, 2); 
+            let blob = new Blob([formattedJSON], {type: "application/json"});
+            let url = URL.createObjectURL(blob);
+            let a = document.createElement('a'); a.href = url; a.download = (currentProjectName || "mi_juego") + ".json"; a.click();
+            printLog("Código JSON (.json) descargado con todos tus bloques y sprites legibles.");
+        }
+
+        // --- SISTEMA DE EXPORTACIÓN COMUNIDAD (TEST) ---
+        function generateCommunityCode() {
+            if (activeLevelName) { levels[activeLevelName] = JSON.parse(JSON.stringify(map)); }
+            
+            let author = document.getElementById('com-author').value || '@anonimo';
+            let desc = document.getElementById('com-desc').value || 'Un juego genial hecho en Gamet Studio.';
+            let isTemplate = document.getElementById('com-template').checked;
+            
+            let pjString = JSON.stringify(getProjectJSONRawObj());
+            // Escapamos comillas simples y barras invertidas para no romper la inyección del String JS
+            let safeData = pjString.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+            
+            let codeObj = `{\n    name: "${currentProjectName || 'Mi Juego'}",\n    author: "${author}",\n    isTemplate: ${isTemplate},\n    desc: "${desc}",\n    plays: 0,\n    rating: 100,\n    picks: false,\n    featured: false,\n    data: '${safeData}'\n}`;
+            
+            document.getElementById('community-form-modal').style.display = 'none';
+            document.getElementById('community-export-text').value = codeObj;
+            document.getElementById('community-export-modal').style.display = 'flex';
+        }
+
+        function copyCommunityCode() {
+            let copyText = document.getElementById("community-export-text");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+            try {
+                document.execCommand('copy');
+                showToast("¡Código de la comunidad copiado!", "success");
+                setTimeout(() => { document.getElementById('community-export-modal').style.display = 'none'; }, 1500);
+            } catch(e) {
+                showToast("Error al copiar. Selecciona y copia manualmente.", "error");
+            }
+        }
+
+        // --- SISTEMA DE GENERACIÓN DE HTML (ESTABLE, SIN INTERPOLACIÓN ERRÓNEA DE JS) ---
+        function getPlayableHTMLString(pjString, pName) {
+            let templateHTML = `<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>GAMET_GAME_TITLE</title>
+    <style>
+        body { margin:0; background:#000; display:flex; justify-content:center; align-items:center; height:100vh; overflow:hidden; color:#fff; font-family:sans-serif; }
+        #gameContainer { position:relative; width:800px; height:480px; box-shadow:0 0 30px rgba(0, 229, 255, 0.2); overflow:hidden; }
+        #gameCanvas { width:100%; height:100%; image-rendering:pixelated; background:#000; }
+        #ui-overlay { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; }
+        #stats { position:absolute; top:10px; left:10px; color:#fff; font-family:monospace; font-size:14px; text-shadow:1px 1px 0 #000; z-index:2000; display:flex; gap: 20px;}
+        #stats div { background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 4px; border: 1px solid #333;}
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="480"></canvas>
+        <div id="ui-overlay"></div>
+        <div id="stats">
+            <div>♥ <span id="stats-hp">100</span></div>
+            <div>⚡ <span id="stats-ammo">0</span></div>
+            <div>⭐ <span id="stats-score">0</span></div>
+        </div>
+    </div>
+    <script>
+        const PROJECT_DATA = GAMET_PROJECT_DATA;
+        const COLS = 20, ROWS = 12;
+        let map = [];
+        let levels = PROJECT_DATA.levels;
+        let activeLevelName = PROJECT_DATA.activeLevelName;
+        let objects = PROJECT_DATA.objects;
+        let uiCanvasList = PROJECT_DATA.uiCanvasList;
+        let globalSprites = PROJECT_DATA.spritesRaw || [];
+        let engineConfig = PROJECT_DATA.engineConfig;
+
+        let activeEntities = [];
+        let player = { x: 2, y: 2, vx: 0, vy: 0, angle: 0, speed: engineConfig.pSpeed, hp: 100, ammo: 0, score: 0, alive: true, isBusy: {}, customVars: {} };
+        let keys = {};
+        let isPlaying = true;
+        let activeUIName = null;
+        let gameLoop = null;
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = false;
+        let actx = null;
+
+        window.onkeydown = e => {
+            let keyName = e.key.toLowerCase(); keys[keyName] = true;
+            if(isPlaying && player.alive) {
+                triggerEvent(getPlayerEntData(), 'keypress', keyName);
+                activeEntities.forEach(ent => { if(!ent.dead) triggerEvent(ent, 'keypress', keyName); });
+            }
+        };
+        window.onkeyup = e => keys[e.key.toLowerCase()] = false;
+        
+        let isDraggingCam = false;
+        let lastDragX = 0;
+
+        document.getElementById('gameContainer').addEventListener('mousedown', (e) => {
+            if(!isPlaying || !player.alive) return;
+            document.getElementById('gameContainer').requestPointerLock();
+            isDraggingCam = true;
+            lastDragX = e.clientX;
+            
+            triggerEvent(getPlayerEntData(), 'click');
+            activeEntities.forEach(ent => triggerEvent(ent, 'click'));
+        });
+
+        document.addEventListener('mousemove', e => {
+            if(isPlaying && player.alive) {
+                if (document.pointerLockElement) {
+                    player.angle += e.movementX * engineConfig.pTurn;
+                } else if (isDraggingCam) {
+                    let deltaX = e.clientX - lastDragX;
+                    player.angle += deltaX * 0.007;
+                    lastDragX = e.clientX;
+                }
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDraggingCam = false;
+        });
+
+        function getPlayerEntData() {
+            if(!player.isBusy) player.isBusy = {};
+            return {
+                get tx() { return player.x; }, set tx(v) { player.x = v; },
+                get ty() { return player.y; }, set ty(v) { player.y = v; },
+                templateId: 1, isBusy: player.isBusy, get dead() { return !player.alive; }, speedMult: 1, overSprite: -1
+            };
+        }
+
+        function playSfx(type) {
+            try {
+                if(!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+                if(actx.state === 'suspended') actx.resume();
+                let osc = actx.createOscillator(); let gain = actx.createGain();
+                osc.connect(gain); gain.connect(actx.destination); let t = actx.currentTime;
+                
+                if(type === 'pew') {
+                    osc.type = 'square'; osc.frequency.setValueAtTime(800, t); osc.frequency.exponentialRampToValueAtTime(100, t + 0.2);
+                    gain.gain.setValueAtTime(0.3, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.2); osc.start(t); osc.stop(t + 0.2);
+                } else if (type === 'hurt') {
+                    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, t); osc.frequency.exponentialRampToValueAtTime(50, t + 0.3);
+                    gain.gain.setValueAtTime(0.5, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3); osc.start(t); osc.stop(t + 0.3);
+                } else if (type === 'coin') {
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(1000, t); osc.frequency.setValueAtTime(1500, t + 0.1);
+                    gain.gain.setValueAtTime(0.3, t); gain.gain.linearRampToValueAtTime(0, t + 0.3); osc.start(t); osc.stop(t + 0.3);
+                }
+            } catch(e){}
+        }
+
+        function updateHUD() { 
+            document.getElementById('stats-hp').innerText = player.hp;
+            document.getElementById('stats-ammo').innerText = player.ammo; 
+            document.getElementById('stats-score').innerText = player.score; 
+        }
+
+        function refreshRuntimeUI() {
+            if (!isPlaying || !activeUIName) return;
+            let ui = uiCanvasList[activeUIName];
+            if (!ui) return;
+            let ov = document.getElementById('ui-overlay');
+            let texts = ov.querySelectorAll('.preview-text');
+            let textElements = ui.filter(el => el.type === 'text');
+            textElements.forEach((el, index) => {
+                let htmlEl = texts[index];
+                if (htmlEl) {
+                    let pt = el.val.replace(/\\{([^\\}]+)\\}/g, (match, vName) => {
+                        if(vName === 'HP') return player.hp;
+                        if(vName === 'AMMO') return player.ammo;
+                        if(vName === 'SCORE') return player.score;
+                        return player.customVars[vName] !== undefined ? player.customVars[vName] : match;
+                    });
+                    htmlEl.textContent = pt;
+                }
+            });
+        }
+
+        function getObjAt(x, y) {
+            let cx = Math.floor(x), cy = Math.floor(y);
+            if(cx<0 || cx>=COLS || cy<0 || cy>=ROWS) return objects[2]; return objects[map[cy][cx]];
+        }
+
+        function printLog(msg) { console.log(msg); }
+
+        async function triggerEvent(entData, eventType, extraParam = '') {
+            let obj = objects[entData.templateId];
+            if (!obj || !obj.scripts) return;
+            for (let i = 0; i < obj.scripts.length; i++) {
+                let scr = obj.scripts[i];
+                if (scr.type === eventType) {
+                    if (eventType === 'keypress' && scr.param !== extraParam) continue;
+                    if (eventType === 'broadcast' && scr.param !== extraParam) continue;
+                    runScript(scr.blocks, entData, scr.id);
+                }
+            }
+        }
+
+        async function runScript(scripts, entData, eType) {
+            if(!scripts || scripts.length === 0 || !isPlaying) return;
+            if(!entData.isBusy) entData.isBusy = {};
+            if(eType && entData.isBusy[eType]) return;
+            if(eType) entData.isBusy[eType] = true;
+
+            for(let i=0; i<scripts.length; i++) {
+                if(!isPlaying || entData.dead && eType !== 'destroy') break;
+                let b = scripts[i]; let vStr = b.val; let vNum = parseFloat(vStr) || 0; 
+
+                if(b.type === 'wait') { await new Promise(resolve => setTimeout(resolve, vNum * 1000)); continue; }
+                if(b.type === 'stop_script') { break; } 
+                if(b.type === 'chance_stop') { if(Math.random() < 0.5) break; }
+                if(b.type === 'set_fog') { engineConfig.fogDist = vNum; }
+
+                if(b.type === 'print') printLog(\`[\${objects[entData.templateId].name}]: \${vStr}\`);
+                if(b.type === 'kill') { player.hp = 0; }
+                if(b.type === 'destroy') { entData.dead = true; }
+                if(b.type === 'win') { player.alive = false; document.getElementById('ui-overlay').innerHTML = '<h1 style="color:#0f0; text-align:center; font-size:50px; margin-top:200px; text-shadow:2px 2px #000; font-family:sans-serif;">VICTORIA</h1>'; }
+                if(b.type === 'add_score') { player.score += vNum; updateHUD(); }
+                if(b.type === 'give_ammo') { player.ammo += vNum; updateHUD(); }
+                if(b.type === 'heal_hp') { player.hp = Math.min(100, player.hp + vNum); updateHUD(); }
+                if(b.type === 'damage') { player.hp -= vNum; updateHUD(); playSfx('hurt'); }
+                if(b.type === 'sound') { playSfx(vStr); }
+                if(b.type === 'set_speed') { if(entData.templateId === 1) player.speed = vNum * 0.1; else entData.speedMult = vNum; }
+                if(b.type === 'set_sprite') { entData.overSprite = Math.floor(vNum); }
+                
+                if(b.type === 'set_block') {
+                    let parts = vStr.split(',');
+                    if (parts.length >= 3) {
+                        let mx = parseInt(parts[0]);
+                        let my = parseInt(parts[1]);
+                        let mId = parseInt(parts[2]);
+                        if (my >= 0 && my < ROWS && mx >= 0 && mx < COLS) { map[my][mx] = mId; }
+                    }
+                }
+
+                if(b.type === 'set_var') { let p = vStr.split(','); if(p.length===2) player.customVars[p[0].trim()] = parseFloat(p[1])||0; }
+                if(b.type === 'add_var') { let p = vStr.split(','); if(p.length===2) { let n = p[0].trim(); player.customVars[n] = (player.customVars[n]||0) + (parseFloat(p[1])||0); } }
+                if(b.type === 'multiply_var') { let p = vStr.split(','); if(p.length===2) { let n = p[0].trim(); player.customVars[n] = (player.customVars[n]||0) * (parseFloat(p[1])||1); } }
+                if(b.type === 'toggle_var') { player.customVars[vStr.trim()] = (player.customVars[vStr.trim()] === 1) ? 0 : 1; }
+                if(b.type === 'teleport') { let coords = vStr.split(','); if(coords.length === 2) { entData.tx = parseFloat(coords[0]); entData.ty = parseFloat(coords[1]); if(entData.templateId === 1) { player.x = entData.tx; player.y = entData.ty; } } }
+                if(b.type === 'bounce') { if(entData.templateId !== 1) entData.dir += Math.PI; else player.angle += Math.PI; }
+                if(b.type === 'set_sky') engineConfig.skyColor = vStr;
+                if(b.type === 'set_floor') engineConfig.floorColor = vStr;
+
+                if(b.type === 'send_msg') {
+                    let msg = vStr.trim();
+                    triggerEvent(getPlayerEntData(), 'broadcast', msg);
+                    activeEntities.forEach(ent => triggerEvent(ent, 'broadcast', msg));
+                }
+
+                if(b.type === 'if_var_msg') {
+                    let p = vStr.split(',');
+                    if(p.length >= 4) {
+                        let varName = p[0].trim(); let op = p[1].trim(); let checkVal = parseFloat(p[2].trim()) || 0; let msg = p[3].trim();
+                        let curVal = player.customVars[varName] !== undefined ? player.customVars[varName] : 0;
+                        let conditionMet = false;
+                        if (op === '==') conditionMet = (curVal == checkVal);
+                        else if (op === '>') conditionMet = (curVal > checkVal);
+                        else if (op === '<') conditionMet = (curVal < checkVal);
+                        else if (op === '!=') conditionMet = (curVal != checkVal);
+                        if (conditionMet) {
+                            triggerEvent(getPlayerEntData(), 'broadcast', msg);
+                            activeEntities.forEach(ent => triggerEvent(ent, 'broadcast', msg));
+                        }
+                    }
+                }
+
+                if(b.type === 'spawn') {
+                    let spawnId = Math.floor(vNum);
+                    if(objects[spawnId] && objects[spawnId].physics === 'trigger') {
+                        activeEntities.push({ tx: entData.tx, ty: entData.ty, templateId: spawnId, dead: false, isBusy: {}, speedMult: 1, overSprite: -1, dir: 0 });
+                    }
+                }
+
+                if(b.type === 'load_level') {
+                    let lvlName = vStr.trim();
+                    if(levels[lvlName]) {
+                        activeLevelName = lvlName;
+                        map = JSON.parse(JSON.stringify(levels[lvlName]));
+                        let foundSpawn = false;
+                        for(let y=0; y<ROWS; y++) {
+                            for(let x=0; x<COLS; x++) {
+                                if(map[y][x] === 1) { player.x = x + 0.5; player.y = y + 0.5; map[y][x] = 0; foundSpawn = true; }
+                            }
+                        }
+                        if(!foundSpawn) { player.x = 2.5; player.y = 2.5; }
+                        activeEntities = [];
+                        for(let y=0; y<ROWS; y++) {
+                            for(let x=0; x<COLS; x++) {
+                                let tid = map[y][x];
+                                if(tid > 1 && objects[tid] && objects[tid].physics === 'trigger') {
+                                    activeEntities.push({ tx: x + 0.5, ty: y + 0.5, templateId: tid, dead: false, isBusy: {}, speedMult: 1, overSprite: -1, dir: 0 });
+                                    map[y][x] = 0;
+                                }
+                            }
+                        }
+                        triggerEvent(getPlayerEntData(), 'start');
+                        activeEntities.forEach(ent => triggerEvent(ent, 'start'));
+                        updateHUD();
+                    }
+                }
+
+                if(b.type === 'hide_ui') { document.getElementById('ui-overlay').innerHTML = ''; activeUIName = null; }
+                if(b.type === 'shake') {
+                    let gc = document.getElementById('gameContainer'); gc.style.transform = 'translate(10px, 10px)';
+                    setTimeout(() => gc.style.transform = 'none', 100);
+                }
+                if(b.type === 'show_ui') {
+                    let ui = uiCanvasList[vStr];
+                    if(ui) {
+                        activeUIName = vStr;
+                        let ov = document.getElementById('ui-overlay');
+                        Array.from(ov.querySelectorAll("[data-ui-name='" + vStr + "']")).forEach(e => e.remove());
+                        ui.forEach(el => {
+                            let d;
+                            if(el.type === 'text') {
+                                d = document.createElement('div');
+                                d.className = 'preview-text'; 
+                                let pt = el.val.replace(/\\{([^\\}]+)\\}/g, (match, vName) => {
+                                    if(vName === 'HP') return player.hp; if(vName === 'AMMO') return player.ammo; if(vName === 'SCORE') return player.score;
+                                    return player.customVars[vName] !== undefined ? player.customVars[vName] : match;
+                                });
+                                d.textContent = pt; 
+                                d.style.fontSize = (el.s * 16) + 'px'; 
+                            } 
+                            else if (globalSprites[el.val]) { 
+                                d = document.createElement('canvas'); d.width = 16; d.height = 16;
+                                let sdx = d.getContext('2d'); let sArr = globalSprites[el.val];
+                                if(sArr && sArr.length === 256) {
+                                    for(let k=0; k<256; k++) {
+                                        if(sArr[k] !== 0 && sArr[k] !== 'transparent') { sdx.fillStyle = sArr[k]; sdx.fillRect(k%16, Math.floor(k/16), 1, 1); }
+                                    }
+                                }
+                                d.className = 'preview-sprite'; d.style.width = (el.s * 32) + 'px'; d.style.height = (el.s * 32) + 'px'; 
+                            }
+                            if(d) {
+                                d.style.position = 'absolute'; d.style.left = el.x + '%'; d.style.top = el.y + '%';
+                                d.setAttribute('data-ui-name', vStr); ov.appendChild(d);
+                            }
+                        });
+                    }
+                }
+                if(b.type === 'shoot_ray') {
+                    if(player.ammo > 0) {
+                        player.ammo--; playSfx('pew'); updateHUD();
+                        let hitE = null;
+                        for(let j=0; j<activeEntities.length; j++) {
+                            let e = activeEntities[j]; if(e.dead) continue;
+                            let ang = Math.atan2(e.ty - player.y, e.tx - player.x) - player.angle;
+                            while(ang < -Math.PI) ang += 2*Math.PI; while(ang > Math.PI) ang -= 2*Math.PI;
+                            if(Math.abs(ang) < 0.2) { hitE = e; break; }
+                        } 
+                        if(hitE) triggerEvent(hitE, 'hit');
+                    }
+                }
+                if(entData.templateId !== 1) { 
+                    let spd = (entData.speedMult || 1) * 0.03;
+                    if(b.type === 'chase') {
+                        let dx = player.x - entData.tx, dy = player.y - entData.ty; let dist = Math.sqrt(dx*dx + dy*dy);
+                        if(dist > 0.4) { 
+                            let nx = entData.tx + (dx/dist)*spd; let ny = entData.ty + (dy/dist)*spd;
+                            if(getObjAt(nx, ny).physics !== 'solid') { entData.tx = nx; entData.ty = ny; }
+                        }
+                    }
+                    if(b.type === 'chase_shoot') { if(Math.random() < 0.02) { playSfx('pew'); player.hp -= 5; updateHUD(); } }
+                    if(b.type === 'move_rand') {
+                        if(Math.random() < 0.05) entData.dir = Math.random() * Math.PI * 2;
+                        let nx = entData.tx + Math.cos(entData.dir)*spd; let ny = entData.ty + Math.sin(entData.dir)*spd;
+                        if(getObjAt(nx, ny).physics !== 'solid') { entData.tx = nx; entData.ty = ny; }
+                    }
+                    if(b.type === 'move_fw') { 
+                        let nx = entData.tx + Math.cos(entData.dir)*(vNum*0.05); let ny = entData.ty + Math.sin(entData.dir)*(vNum*0.05);
+                        if(getObjAt(nx, ny).physics !== 'solid') { entData.tx = nx; entData.ty = ny; }
+                    }
+                    if(b.type === 'move_x') { let nx = entData.tx + (vNum * 0.05); if(getObjAt(nx, entData.ty).physics !== 'solid') entData.tx = nx; }
+                    if(b.type === 'move_y') { let ny = entData.ty + (vNum * 0.05); if(getObjAt(entData.tx, ny).physics !== 'solid') entData.ty = ny; }
+                }
+            }
+            if(eType && entData) entData.isBusy[eType] = false;
+        }
+
+        function render3D() {
+            const fov = Math.PI/3; const rays = 320; const strW = 800/rays; let zBuf = new Array(rays).fill(0);
+            ctx.fillStyle = engineConfig.skyColor; ctx.fillRect(0, 0, 800, 240);
+            ctx.fillStyle = engineConfig.floorColor; ctx.fillRect(0, 240, 800, 240);
+
+            for(let i=0; i<rays; i++) {
+                let rAng = (player.angle - fov/2) + (i/rays)*fov; let ex = Math.cos(rAng), ey = Math.sin(rAng);
+                let dist = 0, hit = false, cObj = null;
+                while(!hit && dist < 50) {
+                    dist += 0.05; let tx = Math.floor(player.x + ex*dist), ty = Math.floor(player.y + ey*dist);
+                    if(tx<0||tx>=COLS||ty<0||ty>=ROWS) { hit = true; dist = 50; }
+                    else if(map[ty][tx] > 0) { hit = true; cObj = objects[map[ty][tx]]; }
+                }
+                if(hit) {
+                    let corr = dist * Math.cos(rAng - player.angle); zBuf[i] = corr;
+                    let wH = 480 / corr; let dY = 240 - wH/2;
+                    let fogLvl = Math.min(dist / engineConfig.fogDist, 1.0);
+
+                    if(cObj && cObj.spriteIdx >= 0 && globalSprites[cObj.spriteIdx]) {
+                        let hX = player.x + ex*dist, hY = player.y + ey*dist; let wX = hX % 1;
+                        if(Math.abs(hY%1 - 1)<0.05 || Math.abs(hY%1)<0.05) wX = hX%1; else wX = hY%1;
+                        let tx = Math.floor(wX * 16);
+                        let sArr = globalSprites[cObj.spriteIdx];
+                        let drawX = i*strW;
+                        
+                        for(let yP=0; yP<16; yP++) {
+                            let color = sArr[yP*16 + tx];
+                            if(color !== 0 && color !== 'transparent') {
+                                ctx.fillStyle = color;
+                                ctx.fillRect(drawX, dY + (yP * wH/16), strW+1, wH/16 + 1);
+                                if (fogLvl > 0) {
+                                    ctx.fillStyle = "rgba(0,0,0," + fogLvl + ")";
+                                    ctx.fillRect(drawX, dY + (yP * wH/16), strW+1, wH/16 + 1);
+                                }
+                            }
+                        }
+                    } else if (cObj) {
+                        ctx.fillStyle = cObj.color;
+                        ctx.fillRect(i*strW, dY, strW+1, wH);
+                        if (fogLvl > 0) {
+                            ctx.fillStyle = "rgba(0,0,0," + fogLvl + ")";
+                            ctx.fillRect(i*strW, dY, strW+1, wH);
+                        }
+                    }
+                }
+            }
+
+            let sorted = [...activeEntities].sort((a,b) => (Math.pow(b.tx-player.x,2)+Math.pow(b.ty-player.y,2)) - (Math.pow(a.tx-player.x,2)+Math.pow(a.ty-player.y,2)));
+            sorted.forEach(ent => {
+                let dx = ent.tx - player.x, dy = ent.ty - player.y; let dist = Math.sqrt(dx*dx + dy*dy);
+                let ang = Math.atan2(dy, dx) - player.angle;
+                while(ang < -Math.PI) ang += 2*Math.PI; while(ang > Math.PI) ang -= 2*Math.PI;
+                if (Math.abs(ang) < fov) {
+                    let corr = dist * Math.cos(ang);
+                    let scX = (0.5 * (ang / (fov/2)) + 0.5) * rays;
+                    let sH = (480 / corr) * 1.35;
+                    let sW = sH;
+                    let obj = objects[ent.templateId];
+                    let sId = ent.overSprite >= 0 ? ent.overSprite : obj.spriteIdx;
+                    let fogLvl = Math.min(dist / engineConfig.fogDist, 1.0);
+                    
+                    let drawX = (scX * strW) - sW/2;
+                    let drawY = 240 - sH/2;
+
+                    for (let stripe = 0; stripe < sW; stripe++) {
+                        let rayIdx = Math.floor((drawX + stripe) / strW);
+                        if (rayIdx >= 0 && rayIdx < rays) {
+                            if (dist < zBuf[rayIdx]) {
+                                let texX = Math.floor((stripe / sW) * 16);
+                                if (sId >= 0 && globalSprites[sId]) {
+                                    let sArr = globalSprites[sId];
+                                    for(let yP=0; yP<16; yP++) {
+                                        let color = sArr[yP*16 + texX];
+                                        if(color !== 0 && color !== 'transparent') {
+                                            ctx.fillStyle = color;
+                                            ctx.fillRect(drawX + stripe, drawY + (yP * sH/16), 1, sH/16 + 1);
+                                            if (fogLvl > 0) {
+                                                ctx.fillStyle = "rgba(0,0,0," + fogLvl + ")";
+                                                ctx.fillRect(drawX + stripe, drawY + (yP * sH/16), 1, sH/16 + 1);
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    ctx.fillStyle = obj.color;
+                                    ctx.fillRect(drawX + stripe, drawY, 1, sH);
+                                    if (fogLvl > 0) {
+                                        ctx.fillStyle = "rgba(0,0,0," + fogLvl + ")";
+                                        ctx.fillRect(drawX + stripe, drawY, 1, sH);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            ctx.fillStyle = 'rgba(0,255,204,0.5)'; ctx.fillRect(400-2, 240-2, 4, 4);
+        }
+
+        function loop() {
+            if(!isPlaying) return;
+            if(player.hp <= 0 && player.alive) { player.alive = false; document.getElementById('ui-overlay').innerHTML = '<h1 style="color:#f00; text-align:center; font-size:50px; margin-top:200px; text-shadow:2px 2px #000; font-family:sans-serif;">GAME OVER</h1>'; }
+            if(!player.alive) { ctx.fillStyle = 'rgba(255,0,0,0.2)'; ctx.fillRect(0,0,800,480); return; }
+
+            triggerEvent(getPlayerEntData(), 'update');
+            activeEntities.forEach(ent => {
+                if(!ent.dead) {
+                    triggerEvent(ent, 'update');
+                    let dist = Math.sqrt(Math.pow(ent.tx - player.x, 2) + Math.pow(ent.ty - player.y, 2));
+                    if(dist < 0.6) triggerEvent(ent, 'collide');
+                }
+            });
+            activeEntities = activeEntities.filter(ent => !ent.dead);
+
+            // Giro alternativo continuo por teclado en juego compilado
+            if(keys['arrowleft'] || keys['q']) { player.angle -= 0.045; }
+            if(keys['arrowright'] || keys['e']) { player.angle += 0.045; }
+
+            let dx = Math.cos(player.angle)*player.speed; let dy = Math.sin(player.angle)*player.speed;
+            let sx = Math.cos(player.angle - Math.PI/2)*player.speed; let sy = Math.sin(player.angle - Math.PI/2)*player.speed;
+            
+            if(keys['w']) { if(getObjAt(player.x+dx, player.y).physics !== 'solid') player.x += dx; if(getObjAt(player.x, player.y+dy).physics !== 'solid') player.y += dy; }
+            if(keys['s']) { if(getObjAt(player.x-dx, player.y).physics !== 'solid') player.x -= dx; if(getObjAt(player.x, player.y-dy).physics !== 'solid') player.y -= dy; }
+            if(keys['a']) { if(getObjAt(player.x+sx, player.y).physics !== 'solid') player.x += sx; if(getObjAt(player.x, player.y+sy).physics !== 'solid') player.y += sy; }
+            if(keys['d']) { if(getObjAt(player.x-sx, player.y).physics !== 'solid') player.x -= sx; if(getObjAt(player.x, player.y-sy).physics !== 'solid') player.y -= sy; }
+
+            ctx.fillStyle = '#0a0a0a'; ctx.fillRect(0,0,800,480);
+            render3D();
+            refreshRuntimeUI();
+
+            gameLoop = requestAnimationFrame(loop);
+        }
+
+        async function init() { 
+            let splash = document.getElementById('splash');
+            if (splash) {
+                setTimeout(() => { splash.style.opacity = 0; setTimeout(() => splash.remove(), 1000); }, 2000);
+            }
+
+            for(let y=0; y<ROWS; y++) {
+                for(let x=0; x<COLS; x++) {
+                    let tid = map[y][x];
+                    if(tid === 1) {
+                        player.x = x + 0.5; player.y = y + 0.5; map[y][x] = 0;
+                    } else if (tid > 1 && objects[tid] && objects[tid].physics === 'trigger') {
+                        activeEntities.push({ tx: x + 0.5, ty: y + 0.5, templateId: tid, dead: false, isBusy: {}, speedMult: 1, overSprite: -1, dir: 0 });
+                        map[y][x] = 0;
+                    }
+                }
+            }
+            triggerEvent(getPlayerEntData(), 'start');
+            activeEntities.forEach(ent => triggerEvent(ent, 'start'));
+            loop();
+        }
+        
+        init();
+    <\/script>
+</body>
+</html>`;
+
+            // SOLUCIÓN DEFINITIVA: Reemplazo SEGURO utilizando Funciones Anónimas para evitar colisiones regex
+            let exportResult = templateHTML
+                .replace("GAMET_GAME_TITLE", () => pName || "Juego Exportado")
+                .replace("GAMET_PROJECT_DATA", () => pjString);
+
+            return exportResult;
+        }
+
+        function exportPlayableHTML() {
+            let pjString = JSON.stringify(getProjectJSONRawObj());
+            let sHTML = getPlayableHTMLString(pjString, currentProjectName);
+            let blob = new Blob([sHTML], {type: "text/html"});
+            let url = URL.createObjectURL(blob);
+            let a = document.createElement('a'); a.href = url; a.download = (currentProjectName || "mi_juego") + ".html"; a.click();
+            showToast("¡Compilado con éxito! Motor 3D incrustado y descarga iniciada.", "success");
+        }
+
+        init();
+
+        // --- INIT PRINCIPAL ---
+        refreshHubProjects();
+    </script>
+</body>
+</html>
