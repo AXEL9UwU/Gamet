@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gamet Studio - Multi-Level & Builder</title>
+    <!-- Importar Supabase SDK oficial -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { 
             --bg: #09090b; --panel: #121218; --accent: #ff0055; --accent2: #00e5ff; --text: #e0e0e0;
@@ -173,11 +175,11 @@
         <iframe id="play-iframe" sandbox="allow-scripts allow-same-origin allow-pointer-lock"></iframe>
     </div>
 
-    <!-- MODAL FORMULARIO COMUNIDAD -->
+    <!-- MODAL FORMULARIO COMUNIDAD (SUPABASE) -->
     <div id="community-form-modal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(5,5,8,0.9); backdrop-filter: blur(8px); z-index: 12000; display: none; align-items: center; justify-content: center;">
         <div style="background: #121218; border: 2px solid #00cc66; border-radius: 12px; width: 90%; max-width: 400px; padding: 25px; box-shadow: 0 0 40px rgba(0,204,102,0.25);">
-            <h3 style="color: #00cc66; margin-top: 0; font-size: 20px;">🌐 Publicar en Comunidad</h3>
-            <p style="color: #aaa; font-size: 13px; margin-bottom: 20px;">Rellena los datos para generar el código de tu juego.</p>
+            <h3 style="color: #00cc66; margin-top: 0; font-size: 20px;">🌐 Publicar en Supabase</h3>
+            <p style="color: #aaa; font-size: 13px; margin-bottom: 20px;">Sube tu juego directamente a la base de datos de la comunidad.</p>
             
             <label style="font-size: 12px; color: #fff; display: block; text-align: left; margin-bottom: 5px;">Tu nombre/alias:</label>
             <input type="text" id="com-author" placeholder="@creador" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #444; background: #000; color: #fff; margin-bottom: 15px; outline: none;">
@@ -192,20 +194,7 @@
             
             <div style="display: flex; gap: 12px; justify-content: flex-end;">
                 <button onclick="document.getElementById('community-form-modal').style.display='none'" style="background: #222; border: 1px solid #444; color: #fff; padding: 8px 15px; border-radius: 4px; cursor: pointer;">Cancelar</button>
-                <button onclick="generateCommunityCode()" style="background: #00cc66; border: none; font-weight: bold; color: #000; padding: 8px 15px; border-radius: 4px; cursor: pointer;">Generar Código</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL CODIGO GENERADO COMUNIDAD -->
-    <div id="community-export-modal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(5,5,8,0.9); backdrop-filter: blur(8px); z-index: 12000; display: none; align-items: center; justify-content: center;">
-        <div style="background: #121218; border: 2px solid #00cc66; border-radius: 12px; width: 90%; max-width: 600px; padding: 25px; box-shadow: 0 0 40px rgba(0,204,102,0.25);">
-            <h3 style="color: #00cc66; margin-top: 0; text-align: left;">Código Listo</h3>
-            <p style="color: #aaa; font-size: 13px; text-align: left;">Copia este código y pégalo añadiéndolo en el array <code>COMMUNITY_DEMOS</code> del código fuente.</p>
-            <textarea id="community-export-text" style="width: 100%; height: 250px; background: #000; color: #00e5ff; font-family: monospace; font-size: 11px; border: 1px solid #444; border-radius: 6px; padding: 10px; resize: none; margin-bottom: 10px;" readonly></textarea>
-            <div style="display: flex; gap: 12px; justify-content: flex-end;">
-                <button onclick="document.getElementById('community-export-modal').style.display='none'" style="background: #222; border: 1px solid #444; color: #fff; padding: 8px 15px; border-radius: 4px; cursor: pointer;">Cerrar</button>
-                <button onclick="copyCommunityCode()" style="background: #00cc66; border: none; font-weight: bold; color: #000; padding: 8px 15px; border-radius: 4px; cursor: pointer;">📋 Copiar Código</button>
+                <button onclick="publishToSupabase()" id="btn-publish-supa" style="background: #00cc66; border: none; font-weight: bold; color: #000; padding: 8px 15px; border-radius: 4px; cursor: pointer;">☁️ Subir Juego</button>
             </div>
         </div>
     </div>
@@ -250,8 +239,8 @@
 
         <div class="hub-container" id="hub-community" style="max-width: 900px; width:100%; padding:20px;">
             <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #333; padding-bottom:10px;">
-                <h3 style="color:#00e5ff; margin:0;">🕹️ Juegos de la Comunidad</h3>
-                <p style="color:#aaa; font-size:13px; margin:0;">Filtros y ordenación inteligentes.</p>
+                <h3 style="color:#00e5ff; margin:0;">🕹️ Juegos de la Comunidad (Supabase)</h3>
+                <button onclick="fetchCommunityGames()" style="background:transparent; color:var(--accent2); border:1px solid var(--accent2); padding: 5px 10px; font-size:12px; border-radius:4px;"><i class="fas fa-sync"></i> Recargar Nube</button>
             </div>
             <!-- Nueva barra de pestañas para la comunidad con algoritmo de clasificación -->
             <div class="com-subtabs" id="com-subtabs-container">
@@ -261,7 +250,7 @@
                 <button class="com-subtab-btn" onclick="switchCommunityCategory('picks')">🌟 Selección Gamet Team</button>
             </div>
             <!-- Buscador en tiempo real -->
-            <input type="text" id="com-search" placeholder="🔍 Buscar juegos o usuarios..." oninput="loadCommunityDemos()" style="width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 6px; background: #000; border: 1px solid #333; color: #fff; font-size: 14px; outline: none;">
+            <input type="text" id="com-search" placeholder="🔍 Buscar juegos o usuarios en la nube..." oninput="loadCommunityDemos()" style="width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 6px; background: #000; border: 1px solid #333; color: #fff; font-size: 14px; outline: none;">
             
             <div class="hub-grid" id="hub-community-list"></div>
         </div>
@@ -502,21 +491,21 @@
             <div class="sidebar">
                 <h3>Guardar Proyecto</h3>
                 <button onclick="saveProjectToHub()" class="btn-green" style="height: 40px;">💾 Guardar Cambios</button>
-                <button onclick="exportProjectJSON()" style="height: 40px; margin-bottom: 20px;">⬇️ Descargar Código (.json)</button>
+                <button onclick="exportProjectJSON()" style="height: 40px; margin-bottom: 20px;">⬇️ Descargar Proyecto Local (.json)</button>
             </div>
             <div class="main-area" style="justify-content: center; align-items: center; background: #000; flex-direction: row; flex-wrap: wrap; gap: 20px; padding: 40px;">
                 <div style="background: #111; padding: 40px; border: 2px solid var(--accent2); border-radius: 12px; text-align: center; max-width: 400px; flex: 1; box-shadow: 0 0 30px rgba(0,229,255,0.15);">
                     <h1 style="color: var(--accent2); margin-top:0; font-size: 24px;">🚀 JUEGO PLAYABLE</h1>
                     <p style="color: #aaa; font-size: 13px; line-height: 1.5;">Compila tu nivel, tus bloques Scratch y tus sprites en un único archivo <b>.html</b> ultra-optimizado.</p>
-                    <p style="color: #888; font-size: 11px; margin-top: 10px;">¡Pégalo directamente en la herramienta <b>"Insertar código" de Google Sites</b> o tu NAS!</p>
+                    <p style="color: #888; font-size: 11px; margin-top: 10px;">¡Súbelo a <b>GitHub Pages</b> para que el mundo pueda jugar mediante un enlace!</p>
                     <button onclick="exportPlayableHTML()" style="background: var(--accent); color: #fff; font-size: 14px; height: 50px; margin-top: 20px; box-shadow: 0 0 20px rgba(255, 0, 85, 0.4);">📦 EXPORTAR HTML</button>
                 </div>
 
                 <div style="background: #111; padding: 40px; border: 2px solid #00cc66; border-radius: 12px; text-align: center; max-width: 400px; flex: 1; box-shadow: 0 0 30px rgba(0,204,102,0.15);">
-                    <h1 style="color: #00cc66; margin-top:0; font-size: 24px;">🌐 COMUNIDAD</h1>
-                    <p style="color: #aaa; font-size: 13px; line-height: 1.5;">Genera el objeto JSON exacto para añadirlo a la lista de juegos de la comunidad en el Hub.</p>
-                    <p style="color: #888; font-size: 11px; margin-top: 10px;">Para fase de pruebas (Test) local sin base de datos en NAS todavía.</p>
-                    <button onclick="document.getElementById('community-form-modal').style.display='flex';" style="background: #00cc66; color: #000; font-size: 14px; height: 50px; margin-top: 20px; box-shadow: 0 0 20px rgba(0, 204, 102, 0.4);">🔗 GENERAR CÓDIGO</button>
+                    <h1 style="color: #00cc66; margin-top:0; font-size: 24px;">☁️ NUBE (Supabase)</h1>
+                    <p style="color: #aaa; font-size: 13px; line-height: 1.5;">Sube este proyecto automáticamente a la base de datos de la comunidad usando Supabase.</p>
+                    <p style="color: #888; font-size: 11px; margin-top: 10px;">Todos los usuarios verán tu juego en la pestaña de Comunidad al instante.</p>
+                    <button onclick="document.getElementById('community-form-modal').style.display='flex';" style="background: #00cc66; color: #000; font-size: 14px; height: 50px; margin-top: 20px; box-shadow: 0 0 20px rgba(0, 204, 102, 0.4);">☁️ SUBIR JUEGO</button>
                 </div>
             </div>
         </div>
@@ -547,12 +536,22 @@
                     <canvas id="gameCanvas" width="800" height="480"></canvas>
                     <div id="ui-overlay"></div>
                 </div>
-                <div id="log" style="width: 800px; margin-top: 10px;">Gamet Engine Listo. Bloques condicionales añadidos.<br></div>
+                <div id="log" style="width: 800px; margin-top: 10px;">Gamet Engine Listo. Esperando eventos...<br></div>
             </div>
         </div>
     </div>
 
     <script>
+        // --- SUPABASE CONFIGURATION ---
+        // ¡INSERTA TUS CREDENCIALES DE SUPABASE AQUÍ ABAJO!
+        const SUPABASE_URL = 'https://mvcsqqxmsmwkfgpkwamq.supabase.co/'; // Ej: 'https://xyzabcdef.supabase.co'
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12Y3NxcXhtc213a2ZncGt3YW1xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTY2MDU0MiwiZXhwIjoyMDk3MjM2NTQyfQ.ThzvOVKI9IWKOzDKMUX2xbYjkINn_nzDcplxM8aH1tk'; // Ej: 'eyJhbGciOiJIUzI1NiIsInR...'
+
+        let supabaseClient = null;
+        if (SUPABASE_URL !== 'TU_URL_DE_SUPABASE' && SUPABASE_KEY !== 'TU_CLAVE_ANON_DE_SUPABASE') {
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        }
+
         // --- DATA ARCHITECTURE ---
         const COLS = 20, ROWS = 12;
         let map = Array.from({length: ROWS}, () => Array(COLS).fill(0));
@@ -562,7 +561,7 @@
         let isDrawingSprite = false;
         let editingSpriteIdx = -1;
         
-        let globalSprites = []; 
+        let globalSprites = []; // Arrays numéricos de 256 en memoria para el editor (NO CANVAS)
         let uiCanvasList = {}; 
         let activeSpriteIdx = -1; 
         let activeUISpriteIdx = -1;
@@ -592,11 +591,6 @@
 
         function printLog(msg) { logEl.innerHTML += `<span style="color:#666">[>_]</span> ${msg}<br>`; logEl.scrollTop = logEl.scrollHeight; }
 
-        function showLogoFallback() {
-            document.getElementById('hub-logo').style.display = 'none';
-            document.getElementById('hub-logo-fallback').style.display = 'block';
-        }
-
         // --- CUSTOM ALARMS AND NOTIFICATIONS SYSTEM ---
         function showToast(message, type = 'info') {
             let container = document.getElementById('toast-container');
@@ -616,7 +610,7 @@
             toast.style.transition = 'all 0.3s ease';
             toast.style.pointerEvents = 'auto';
 
-            let icon = type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️';
+            let icon = type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : '☁️';
             toast.innerHTML = `<span style="font-size:18px;">${icon}</span><span style="font-size:13px; font-weight:500;">${message}</span>`;
             
             container.appendChild(toast);
@@ -677,51 +671,19 @@
             setTimeout(() => { modal.style.display = 'none'; }, 150);
         }
 
-        // --- HUB SYSTEM & DEMOS ---
+        // --- HUB SYSTEM & DEMOS LOCALES Y NUBE ---
         let activeCommunityCategory = "todos";
+        let COMMUNITY_DEMOS = []; // Ahora se rellena desde Supabase o fallback
 
-        const COMMUNITY_DEMOS = [
+        const COMMUNITY_DEMOS_FALLBACK = [
             {
-                name: "Gamet Laberinto FPS",
-                author: "@gamet_team",
-                isTemplate: true,
-                desc: "Juego de disparos 3D. Contiene enemigos, físicas y UI.",
-                plays: 12450,
-                rating: 94,
-                picks: true,
-                featured: true,
-                data: '{"levels":{"Nivel 1":[[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2],[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],[2,0,1,0,0,0,2,2,2,0,0,3,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,2,2,2,2,0,0,4,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]],"Nivel 2":[[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2],[2,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,2],[2,0,1,0,0,0,0,0,0,0,0,0,2,0,0,3,0,0,0,2],[2,0,0,0,0,0,0,2,2,2,2,2,2,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,2,0,2,2,2,2,2,2,2,2,0,0,2],[2,0,0,0,0,0,0,2,0,2,0,0,0,0,0,0,2,0,0,2],[2,0,0,0,0,0,0,2,0,2,0,0,0,3,0,0,2,0,0,2],[2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,2,0,0,2],[2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,2],[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]]},"activeLevelName":"Nivel 1","objects":{"0":{"id":0,"name":"Borrador (Vacío)","char":" ","color":"#000","physics":"ghost","spriteIdx":-1,"scripts":[]},"1":{"id":1,"name":"Jugador / Arma (@)","char":"@","color":"#00e5ff","physics":"ghost","spriteIdx":-1,"scripts":[{"id":"click_p","type":"click","param":"","blocks":[{"type":"shoot_ray","val":""}]}]},"2":{"id":2,"name":"Muro Base","char":"■","color":"#444","physics":"solid","spriteIdx":-1,"scripts":[]},"3":{"id":3,"name":"Enemigo Básico","char":"X","color":"#ff00aa","physics":"trigger","spriteIdx":-1,"scripts":[{"id":"hit_3","type":"hit","param":"","blocks":[{"type":"destroy","val":""},{"type":"add_score","val":"100"},{"type":"sound","val":"coin"}]},{"id":"collide_3","type":"collide","param":"","blocks":[{"type":"damage","val":"10"},{"type":"shake","val":""},{"type":"wait","val":"1"}]},{"id":"update_3","type":"update","param":"","blocks":[{"type":"chase","val":"1"}]}]},"4":{"id":4,"name":"Puerta","char":"🚪","color":"#00ffcc","physics":"trigger","spriteIdx":-1,"scripts":[{"id":"collide_4","type":"collide","param":"","blocks":[{"type":"load_level","val":"Nivel 2"}]}]}},"uiCanvasList":{},"spritesRaw":[],"engineConfig":{"pSpeed":0.1,"pTurn":0.005,"fogDist":15,"skyColor":"#111111","floorColor":"#050505"}}'
-            },
-            {
-                name: "Gamet Recolector (Demo)",
-                author: "@gamet_team",
-                isTemplate: true,
-                desc: "Busca monedas. Aprende la lógica condicional Si/Sino.",
-                plays: 8520,
-                rating: 89,
-                picks: true,
-                featured: false,
-                data: '{"levels":{"Nivel 1":[[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2],[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],[2,0,1,0,0,0,3,0,0,0,0,3,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,2,2,2,0,0,0,2,2,2,0,0,0,0,0,0,2],[2,0,0,0,2,3,2,0,0,0,2,3,2,0,0,4,0,0,0,2],[2,0,0,0,2,0,2,0,0,0,2,0,2,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]]},"activeLevelName":"Nivel 1","objects":{"0":{"id":0,"name":"Borrador","char":" ","color":"#000","physics":"ghost","spriteIdx":-1,"scripts":[]},"1":{"id":1,"name":"Jugador","char":"@","color":"#00e5ff","physics":"ghost","spriteIdx":-1,"scripts":[]},"2":{"id":2,"name":"Muro","char":"■","color":"#444","physics":"solid","spriteIdx":-1,"scripts":[]},"3":{"id":3,"name":"Moneda","char":"O","color":"#ffcc00","physics":"trigger","spriteIdx":-1,"scripts":[{"id":"c1","type":"collide","param":"","blocks":[{"type":"add_score","val":"100"},{"type":"sound","val":"coin"},{"type":"destroy","val":""}]}]},"4":{"id":4,"name":"Puerta Victoria","char":"🚪","color":"#00ffcc","physics":"trigger","spriteIdx":-1,"scripts":[{"id":"c2","type":"collide","param":"","blocks":[{"type":"if_var_msg","val":"SCORE,>,19,Gano"}]}]}},"uiCanvasList":{},"spritesRaw":[],"engineConfig":{"pSpeed":0.1,"pTurn":0.005,"fogDist":15,"skyColor":"#111111","floorColor":"#050505"}}'
-            },
-            {
-                name: "Backrooms Escape",
-                author: "@player123",
-                isTemplate: false,
-                desc: "Intenta escapar del nivel 0. (Ejemplo JUGAR).",
-                plays: 34100,
-                rating: 96,
-                picks: false,
-                featured: true,
-                data: '{"levels":{"Nivel 1":[[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2],[2,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,2],[2,0,1,0,0,0,0,0,2,0,0,2,2,2,2,2,0,0,0,2],[2,0,0,0,0,0,0,0,2,0,0,2,0,0,0,2,0,0,0,2],[2,0,0,0,2,2,2,0,2,0,0,2,0,4,0,2,0,0,0,2],[2,0,0,0,2,0,2,0,0,0,0,2,0,0,0,2,0,0,0,2],[2,0,0,0,2,0,2,0,0,0,0,2,2,2,2,2,0,0,0,2],[2,0,0,0,2,0,2,2,2,2,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]]},"activeLevelName":"Nivel 1","objects":{"0":{"id":0,"name":"Borrador (Vacío)","char":" ","color":"#000","physics":"ghost","spriteIdx":-1,"scripts":[]},"1":{"id":1,"name":"Jugador","char":"@","color":"#00e5ff","physics":"ghost","spriteIdx":-1,"scripts":[]},"2":{"id":2,"name":"Pared Amarilla","char":"■","color":"#cccc33","physics":"solid","spriteIdx":-1,"scripts":[]},"4":{"id":4,"name":"Salida","char":"🚪","color":"#00ffcc","physics":"trigger","spriteIdx":-1,"scripts":[{"id":"c4","type":"collide","param":"","blocks":[{"type":"win","val":""}]}]}},"uiCanvasList":{},"spritesRaw":[],"engineConfig":{"pSpeed":0.1,"pTurn":0.005,"fogDist":10,"skyColor":"#222211","floorColor":"#111100"}}'
-            },
-            {
-                name: "Patas al Rescate",
+                name: "Patas al Rescate: Comunidad",
                 author: "@AXEL-TONTITO",
                 isTemplate: false,
-                desc: "¡Evita a los humanos abrazadores y llega a tu plato!",
+                desc: "¡Evita a los humanos abrazadores y llega a tu plato de croquetas!",
                 plays: 1200,
                 rating: 98,
-                picks: false,
+                picks: true,
                 featured: false,
                 data: '{"levels":{"Nivel 1":[[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2],[2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,2,0,2],[2,0,1,0,2,0,0,0,0,2,0,0,0,0,0,0,0,2,4,2],[2,0,0,0,2,3,0,0,0,2,0,0,0,0,0,0,0,2,0,2],[2,0,0,0,2,0,0,0,0,2,0,0,0,0,0,0,0,2,0,2],[2,2,2,2,2,0,0,0,0,2,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,0,2,2,2,2,2,2,0,0,0,0,2],[2,0,0,0,0,2,0,0,3,0,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,2],[2,0,0,0,0,2,0,0,0,0,3,0,0,0,0,0,0,0,0,2],[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]],"Nivel 2":[[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2],[2,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,2,0,0,2],[2,0,1,0,0,2,0,0,0,0,0,0,3,0,0,0,2,0,0,2],[2,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,2,0,0,2],[2,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,2,0,0,2],[2,0,0,0,0,2,2,2,2,2,0,0,0,0,0,0,2,0,0,2],[2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,2],[2,0,0,2,0,0,0,0,0,0,0,0,0,2,2,2,2,0,0,2],[2,0,0,2,0,0,0,0,0,2,2,0,0,2,2,0,0,0,0,2],[2,0,0,2,0,0,0,0,0,2,0,0,0,0,0,0,3,0,0,2],[2,0,0,2,0,0,0,3,0,2,0,0,0,0,0,0,0,0,0,2],[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]]},"activeLevelName":"Nivel 1","objects":{"0":{"id":0,"name":"Patio Libre (Vacío)","char":" ","color":"#000","physics":"ghost","spriteIdx":-1,"scripts":[]},"1":{"id":1,"name":"Michi/Firulais Aventurero","char":"@","color":"#ff9f43","physics":"ghost","spriteIdx":-1,"scripts":[]},"2":{"id":2,"name":"Cerca de la Comunidad","char":"■","color":"#8b5a2b","physics":"solid","spriteIdx":-1,"scripts":[]},"3":{"id":3,"name":"Humano Abrazador","char":"H","color":"#ff4d4d","physics":"trigger","spriteIdx":0,"scripts":[{"id":"comunidad_chase","type":"update","param":"","blocks":[{"type":"chase","val":null}]},{"id":"comunidad_bounce","type":"update","param":"","blocks":[{"type":"bounce","val":null}]}]},"4":{"id":4,"name":"Plato Croquetas","char":"C","color":"#00dbff","physics":"trigger","spriteIdx":1,"scripts":[{"id":"comunidad_portal","type":"collide","param":"","blocks":[{"type":"load_level","val":"Nivel 2"}]}]}},"uiCanvasList":{},"spritesRaw":[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"#ffffff","#ffffff",0,0,0,0,0,"#ffffff",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"#ffffff",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"#ffffff",0,0,0,0,0,0,0,0,"#ffffff",0,0,0,0,0,0,"#ffffff","#ffffff",0,0,0,0,0,0,"#ffffff","#ffffff",0,0,0,0,0,0,0,"#ffffff",0,0,0,0,0,0,"#ffffff",0,0,0,0,0,0,0,0,0,"#ffffff","#ffffff",0,0,"#ffffff","#ffffff",0,0,0,0,0,0,0,0,0,0,0,0,"#ffffff","#ffffff","#ffffff",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"#f5f5f5","#f5f5f5","#f5f5f5","#f5f5f5",0,0,0,0,0,0,0,0,0,0,0,"#f5f5f5","#00c8fa","#00c8fa","#00c8fa","#00c8fa","#f5f5f5",0,0,0,0,0,0,0,0,0,"#f5f5f5","#00c8fa","#00c8fa","#00c8fa","#00c8fa","#00c8fa","#00c8fa","#f5f5f5",0,0,0,0,0,0,0,"#f5f5f5","#00c8fa","#00c8fa","#00c8fa","#00495c","#00495c","#00495c","#00c8fa","#00c8fa","#f5f5f5",0,0,0,0,0,0,"#f5f5f5","#00c8fa","#00c8fa","#00495c","#00495c","#00c8fa","#00c8fa","#00c8fa","#00c8fa","#f5f5f5",0,0,0,0,0,0,"#f5f5f5","#00c8fa","#00c8fa","#00495c","#00c8fa","#00c8fa","#00c8fa","#00c8fa","#00c8fa","#f5f5f5",0,0,0,0,0,0,"#f5f5f5","#00c8fa","#00495c","#00495c","#00c8fa","#00495c","#00495c","#00495c","#00c8fa","#f5f5f5",0,0,0,0,0,0,"#f5f5f5","#00c8fa","#00495c","#00495c","#00c8fa","#00c8fa","#00c8fa","#00495c","#00c8fa","#f5f5f5",0,0,0,0,0,0,"#f5f5f5","#00c8fa","#00c8fa","#00495c","#00495c","#00495c","#00495c","#00c8fa","#00c8fa","#f5f5f5",0,0,0,0,0,0,0,"#f5f5f5","#00c8fa","#00c8fa","#00495c","#00495c","#00c8fa","#00c8fa","#f5f5f5",0,0,0,0,0,0,0,0,0,"#f5f5f5","#00c8fa","#00c8fa","#00c8fa","#00c8fa","#f5f5f5",0,0,0,0,0,0,0,0,0,0,0,"#f5f5f5","#f5f5f5","#f5f5f5","#f5f5f5",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],"engineConfig":{"pSpeed":0.12,"pTurn":0.006,"fogDist":13,"skyColor":"#0f172a","floorColor":"#14532d"}}'
             },
@@ -738,6 +700,35 @@
             }
         ];
 
+        async function fetchCommunityGames() {
+            if (!supabaseClient) {
+                showToast("Faltan las claves de Supabase. Mostrando juegos offline.", "warning");
+                COMMUNITY_DEMOS = [...COMMUNITY_DEMOS_FALLBACK];
+                loadCommunityDemos();
+                return;
+            }
+
+            try {
+                showToast("Sincronizando con la base de datos...", "info");
+                const { data, error } = await supabaseClient.from('gamet_projects').select('*').order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                
+                if (data && data.length > 0) {
+                    COMMUNITY_DEMOS = [...data, ...COMMUNITY_DEMOS_FALLBACK]; // Combina nube con locales
+                } else {
+                    COMMUNITY_DEMOS = [...COMMUNITY_DEMOS_FALLBACK];
+                }
+                loadCommunityDemos();
+                showToast("¡Comunidad sincronizada!", "success");
+            } catch (err) {
+                console.error("Error al obtener de Supabase:", err);
+                showToast("Error de red con Supabase. Usando modo Offline.", "error");
+                COMMUNITY_DEMOS = [...COMMUNITY_DEMOS_FALLBACK];
+                loadCommunityDemos();
+            }
+        }
+
         function showHubTab(tabName) {
             document.getElementById('btn-tab-local').classList.remove('active');
             document.getElementById('btn-tab-com').classList.remove('active');
@@ -751,7 +742,7 @@
             } else {
                 document.getElementById('btn-tab-com').classList.add('active');
                 document.getElementById('hub-community').classList.add('active');
-                loadCommunityDemos();
+                fetchCommunityGames(); // Ahora hace FETCH en vez de cargar lo estático siempre
             }
         }
 
@@ -784,33 +775,34 @@
                 listToRender = listToRender.filter(demo => 
                     demo.name.toLowerCase().includes(searchTerm) || 
                     demo.author.toLowerCase().includes(searchTerm) ||
-                    demo.desc.toLowerCase().includes(searchTerm)
+                    (demo.desc && demo.desc.toLowerCase().includes(searchTerm))
                 );
             }
 
             // Aplicar filtros de pestañas
             if (activeCommunityCategory === "destacados") {
-                listToRender = listToRender.filter(demo => demo.rating >= 90 && demo.plays >= 5000);
+                listToRender = listToRender.filter(demo => demo.rating >= 90 && demo.plays >= 50);
                 listToRender.sort((a, b) => b.plays - a.plays);
             } else if (activeCommunityCategory === "prometedores") {
                 listToRender = listToRender.filter(demo => demo.rating >= 95 && demo.plays < 5000);
                 listToRender.sort((a, b) => b.rating - a.rating);
             } else if (activeCommunityCategory === "picks") {
-                listToRender = listToRender.filter(demo => demo.picks || demo.author === "@gamet_team");
+                listToRender = listToRender.filter(demo => demo.picks || demo.author === "@gamet_team" || demo.author === "@AXEL-TONTITO");
             }
             
             if(listToRender.length === 0) {
-                container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #666; padding: 40px; font-size: 14px;">No se ha encontrado nada con esta búsqueda o filtro.</div>`;
+                container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #666; padding: 40px; font-size: 14px;">No se ha encontrado nada con esta búsqueda o filtro en la nube.</div>`;
                 return;
             }
 
             listToRender.forEach((demo) => {
+                // Buscamos el índice original en el array global
                 let index = COMMUNITY_DEMOS.findIndex(d => d.name === demo.name && d.author === demo.author);
                 
                 let card = document.createElement('div');
                 card.className = 'hub-card';
                 
-                let isTpl = demo.isTemplate;
+                let isTpl = demo.isTemplate || demo.istemplate; // Por si supabase lo pone en minúsculas
                 let badgeClass = isTpl ? 'template' : 'game';
                 let badgeText = isTpl ? ' Plantilla Editable' : ' Juego Terminado';
                 let colorBorder = isTpl ? '#00e5ff' : '#00cc66';
@@ -823,8 +815,8 @@
                         <h4>${demo.name}</h4>
                         <p class="author">Autor: ${demo.author}</p>
                         <div class="stats-line">
-                            <span>👍 ${demo.rating}%</span>
-                            <span>👁️ ${demo.plays.toLocaleString()}</span>
+                            <span>👍 ${demo.rating || 100}%</span>
+                            <span>👁️ ${(demo.plays || 0).toLocaleString()}</span>
                         </div>
                         <span class="badge ${badgeClass}">${badgeText}</span>
                         ${isTpl ? 
@@ -851,7 +843,7 @@
                 showToast(`¡Juego '${finalName}' descargado a tus proyectos locales! Ready para editar.`, "success");
                 showHubTab('local'); 
             } catch(e) {
-                showToast("Error al instalar la plantilla.", "error");
+                showToast("Error al instalar la plantilla. El código está corrupto.", "error");
             }
         }
 
@@ -1041,21 +1033,17 @@
                 return;
             }
             try {
-                // Sincronizar el mapa actual antes de guardar
-                if (activeLevelName) {
-                    levels[activeLevelName] = JSON.parse(JSON.stringify(map));
-                }
+                if (activeLevelName) { levels[activeLevelName] = JSON.parse(JSON.stringify(map)); }
                 let projects = getProjectsFromStorage();
                 let pj = getProjectJSONRawObj();
                 if (pj) {
                     projects[currentProjectName] = pj;
                     saveProjectsToStorage(projects);
                     printLog(`Cambios guardados.`);
-                    showToast("¡Proyecto guardado con éxito!", "success");
+                    showToast("¡Proyecto guardado en tu PC con éxito!", "success");
                 }
             } catch(e) { 
                 showToast("Error al guardar: " + e.message, "error");
-                console.error(e);
             }
         }
 
@@ -1085,8 +1073,14 @@
             reader.readAsText(file);
         }
 
-        // --- SISTEMA DE EXPORTACIÓN COMUNIDAD (TEST) ---
-        function generateCommunityCode() {
+        // --- SISTEMA DE EXPORTACIÓN Y SUPABASE ---
+        async function publishToSupabase() {
+            if (!supabaseClient) {
+                showToast("Falta conectar el API de Supabase en el código (Línea 402).", "error");
+                document.getElementById('community-form-modal').style.display = 'none';
+                return;
+            }
+
             if (activeLevelName) { levels[activeLevelName] = JSON.parse(JSON.stringify(map)); }
             
             let author = document.getElementById('com-author').value || '@anonimo';
@@ -1094,26 +1088,34 @@
             let isTemplate = document.getElementById('com-template').checked;
             
             let pjString = JSON.stringify(getProjectJSONRawObj());
-            // Escapamos comillas simples y barras invertidas para no romper la inyección del String JS
-            let safeData = pjString.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
             
-            let codeObj = `{\n    name: "${currentProjectName || 'Mi Juego'}",\n    author: "${author}",\n    isTemplate: ${isTemplate},\n    desc: "${desc}",\n    plays: 0,\n    rating: 100,\n    picks: false,\n    featured: false,\n    data: '${safeData}'\n}`;
-            
-            document.getElementById('community-form-modal').style.display = 'none';
-            document.getElementById('community-export-text').value = codeObj;
-            document.getElementById('community-export-modal').style.display = 'flex';
-        }
-
-        function copyCommunityCode() {
-            let copyText = document.getElementById("community-export-text");
-            copyText.select();
-            copyText.setSelectionRange(0, 99999);
             try {
-                document.execCommand('copy');
-                showToast("¡Código de la comunidad copiado!", "success");
-                setTimeout(() => { document.getElementById('community-export-modal').style.display = 'none'; }, 1500);
-            } catch(e) {
-                showToast("Error al copiar. Selecciona y copia manualmente.", "error");
+                showToast("Subiendo a Supabase...", "info");
+                
+                const { data, error } = await supabaseClient
+                    .from('gamet_projects')
+                    .insert([
+                        { 
+                            name: currentProjectName || 'Mi Juego', 
+                            author: author, 
+                            isTemplate: isTemplate, 
+                            desc: desc, 
+                            plays: 0, 
+                            rating: 100, 
+                            picks: false, 
+                            featured: false, 
+                            data: pjString 
+                        }
+                    ]);
+
+                if (error) throw error;
+
+                document.getElementById('community-form-modal').style.display = 'none';
+                showToast("¡Juego publicado en la comunidad mundial!", "success");
+                
+            } catch (err) {
+                console.error("Error subiendo a Supabase:", err);
+                showToast("Hubo un error al subir el juego a la nube.", "error");
             }
         }
 
@@ -1386,6 +1388,7 @@
             }
         }
 
+        // --- MAIN INITIALIZATION & RUNTIME LOOP ---
         function clearSpriteEditor() { 
             currentPixels.fill('transparent'); 
             Array.from(document.getElementById('sprite-editor').children).forEach(p => p.style.backgroundColor = 'transparent');
@@ -1524,11 +1527,11 @@
                         }
                     }
                     d.className = 'preview-sprite'; 
-                    d.style.width = `${el.s * 32}px`; 
-                    d.style.height = `${el.s * 32}px`; 
+                    d.style.width = (el.s * 32) + 'px'; 
+                    d.style.height = (el.s * 32) + 'px'; 
                 }
                 if(d) {
-                    d.style.position = 'absolute'; d.style.left = `${el.x}%`; d.style.top = `${el.y}%`;
+                    d.style.position = 'absolute'; d.style.left = el.x + '%'; d.style.top = el.y + '%';
                     prev.appendChild(d);
                 }
             });
@@ -1714,12 +1717,12 @@
                     div.className = `visual-block workspace-block ${conf.cl}`;
                     let inputStyle = (b.type === 'if_var_msg' || b.type === 'if_var' || b.type === 'set_block') ? 'width: 110px;' : '';
                     if (b.type === 'set_sky' || b.type === 'set_floor') {
-                        let h = `<span>${conf.txt}</span> <input type="color" value="${b.val || '#000000'}" style="width:60px; height:22px; padding:0;" onchange="objects[${oId}].scripts[${scrIdx}].blocks[${idx}].val = this.value; saveProjectToHub();">`;
-                        h += `<div style="display:flex; gap:2px; margin-left:auto;"><button class="btn-block-action" onclick="moveBlock(${oId}, ${scrIdx}, ${idx}, -1)">↑</button><button class="btn-block-action" onclick="moveBlock(${oId}, ${scrIdx}, ${idx}, 1)">↓</button><button class="btn-block-action del" onclick="objects[${oId}].scripts[${scrIdx}].blocks.splice(${idx}, 1); loadLogic(); saveProjectToHub();">X</button></div>`;
+                        let h = "<span>" + conf.txt + "</span> <input type='color' value='" + (b.val || '#000000') + "' style='width:60px; height:22px; padding:0;' onchange='objects[" + oId + "].scripts[" + scrIdx + "].blocks[" + idx + "].val = this.value; saveProjectToHub();'>";
+                        h += "<div style='display:flex; gap:2px; margin-left:auto;'><button class='btn-block-action' onclick='moveBlock(" + oId + ", " + scrIdx + ", " + idx + ", -1)'>↑</button><button class='btn-block-action' onclick='moveBlock(" + oId + ", " + scrIdx + ", " + idx + ", 1)'>↓</button><button class='btn-block-action del' onclick='objects[" + oId + "].scripts[" + scrIdx + "].blocks.splice(" + idx + ", 1); loadLogic(); saveProjectToHub();'>X</button></div>";
                         div.innerHTML = h;
                     } else {
-                        let h = `<span>${conf.txt}</span> `; if(conf.inp) h += `<input type="text" value="${b.val}" style="${inputStyle}" onchange="objects[${oId}].scripts[${scrIdx}].blocks[${idx}].val = this.value; saveProjectToHub();">`;
-                        h += `<div style="display:flex; gap:2px; margin-left:auto;"><button class="btn-block-action" onclick="moveBlock(${oId}, ${scrIdx}, ${idx}, -1)">↑</button><button class="btn-block-action" onclick="moveBlock(${oId}, ${scrIdx}, ${idx}, 1)">↓</button><button class="btn-block-action del" onclick="objects[${oId}].scripts[${scrIdx}].blocks.splice(${idx}, 1); loadLogic(); saveProjectToHub();">X</button></div>`;
+                        let h = "<span>" + conf.txt + "</span> "; if(conf.inp) h += "<input type='text' value='" + b.val + "' style='" + inputStyle + "' onchange='objects[" + oId + "].scripts[" + scrIdx + "].blocks[" + idx + "].val = this.value; saveProjectToHub();'>";
+                        h += "<div style='display:flex; gap:2px; margin-left:auto;'><button class='btn-block-action' onclick='moveBlock(" + oId + ", " + scrIdx + ", " + idx + ", -1)'>↑</button><button class='btn-block-action' onclick='moveBlock(" + oId + ", " + scrIdx + ", " + idx + ", 1)'>↓</button><button class='btn-block-action del' onclick='objects[" + oId + "].scripts[" + scrIdx + "].blocks.splice(" + idx + ", 1); loadLogic(); saveProjectToHub();'>X</button></div>";
                         div.innerHTML = h;
                     }
                     dz.appendChild(div);
@@ -1882,7 +1885,7 @@
                 if(b.type === 'chance_stop') { if(Math.random() < 0.5) break; }
                 if(b.type === 'set_fog') { engineConfig.fogDist = vNum; }
 
-                if(b.type === 'print') printLog(`[${objects[entData.templateId].name}]: ${vStr}`);
+                if(b.type === 'print') printLog("[" + objects[entData.templateId].name + "]: " + vStr);
                 if(b.type === 'kill') { player.hp = 0; }
                 if(b.type === 'destroy') { entData.dead = true; }
                 if(b.type === 'win') { player.alive = false; document.getElementById('ui-overlay').innerHTML = '<h1 style="color:#0f0; text-align:center; font-size:50px; margin-top:200px; text-shadow:2px 2px #000; font-family:sans-serif;">VICTORIA</h1>'; }
@@ -1894,15 +1897,17 @@
                 if(b.type === 'set_speed') { if(entData.templateId === 1) player.speed = vNum * 0.1; else entData.speedMult = vNum; }
                 if(b.type === 'set_sprite') { entData.overSprite = Math.floor(vNum); }
                 
-                // NUEVO BLOQUE: set_block (Cambiar Muro)
+                // NUEVO BLOQUE: set_block (Cambiar Muro) con limpieza de espacios en blanco
                 if(b.type === 'set_block') {
                     let parts = vStr.split(',');
                     if (parts.length >= 3) {
-                        let mx = parseInt(parts[0]);
-                        let my = parseInt(parts[1]);
-                        let mId = parseInt(parts[2]);
-                        if (my >= 0 && my < ROWS && mx >= 0 && mx < COLS) {
-                            map[my][mx] = mId;
+                        let mx = parseInt(parts[0].trim());
+                        let my = parseInt(parts[1].trim());
+                        let mId = parseInt(parts[2].trim());
+                        if (!isNaN(mx) && !isNaN(my) && !isNaN(mId)) {
+                            if (my >= 0 && my < ROWS && mx >= 0 && mx < COLS) {
+                                map[my][mx] = mId;
+                            }
                         }
                     }
                 }
@@ -2142,7 +2147,7 @@
                                 ctx.fillStyle = color;
                                 ctx.fillRect(drawX, dY + (yP * wH/16), strW+1, wH/16 + 1);
                                 if (fogLvl > 0) {
-                                    ctx.fillStyle = `rgba(0,0,0,${fogLvl})`;
+                                    ctx.fillStyle = "rgba(0,0,0," + fogLvl + ")";
                                     ctx.fillRect(drawX, dY + (yP * wH/16), strW+1, wH/16 + 1);
                                 }
                             }
@@ -2151,7 +2156,7 @@
                         ctx.fillStyle = cObj.color;
                         ctx.fillRect(i*strW, dY, strW+1, wH);
                         if (fogLvl > 0) {
-                            ctx.fillStyle = `rgba(0,0,0,${fogLvl})`;
+                            ctx.fillStyle = "rgba(0,0,0," + fogLvl + ")";
                             ctx.fillRect(i*strW, dY, strW+1, wH);
                         }
                     }
@@ -2188,7 +2193,7 @@
                                             ctx.fillStyle = color;
                                             ctx.fillRect(drawX + stripe, drawY + (yP * sH/16), 1, sH/16 + 1);
                                             if (fogLvl > 0) {
-                                                ctx.fillStyle = `rgba(0,0,0,${fogLvl})`;
+                                                ctx.fillStyle = "rgba(0,0,0," + fogLvl + ")";
                                                 ctx.fillRect(drawX + stripe, drawY + (yP * sH/16), 1, sH/16 + 1);
                                             }
                                         }
@@ -2197,7 +2202,7 @@
                                     ctx.fillStyle = obj.color;
                                     ctx.fillRect(drawX + stripe, drawY, 1, sH);
                                     if (fogLvl > 0) {
-                                        ctx.fillStyle = `rgba(0,0,0,${fogLvl})`;
+                                        ctx.fillStyle = "rgba(0,0,0," + fogLvl + ")";
                                         ctx.fillRect(drawX + stripe, drawY, 1, sH);
                                     }
                                 }
@@ -2230,7 +2235,6 @@
             activeEntities.forEach(ent => triggerEvent(ent, 'start'));
             loop();
         }
-
         function getProjectJSONRawObj() {
             if (activeLevelName) {
                 levels[activeLevelName] = JSON.parse(JSON.stringify(map));
@@ -2419,9 +2423,7 @@
                 let htmlEl = texts[index];
                 if (htmlEl) {
                     let pt = el.val.replace(/\\{([^\\}]+)\\}/g, (match, vName) => {
-                        if(vName === 'HP') return player.hp;
-                        if(vName === 'AMMO') return player.ammo;
-                        if(vName === 'SCORE') return player.score;
+                        if(vName === 'HP') return player.hp; if(vName === 'AMMO') return player.ammo; if(vName === 'SCORE') return player.score;
                         return player.customVars[vName] !== undefined ? player.customVars[vName] : match;
                     });
                     htmlEl.textContent = pt;
@@ -2479,10 +2481,12 @@
                 if(b.type === 'set_block') {
                     let parts = vStr.split(',');
                     if (parts.length >= 3) {
-                        let mx = parseInt(parts[0]);
-                        let my = parseInt(parts[1]);
-                        let mId = parseInt(parts[2]);
-                        if (my >= 0 && my < ROWS && mx >= 0 && mx < COLS) { map[my][mx] = mId; }
+                        let mx = parseInt(parts[0].trim());
+                        let my = parseInt(parts[1].trim());
+                        let mId = parseInt(parts[2].trim());
+                        if (!isNaN(mx) && !isNaN(my) && !isNaN(mId)) {
+                            if (my >= 0 && my < ROWS && mx >= 0 && mx < COLS) { map[my][mx] = mId; }
+                        }
                     }
                 }
 
@@ -2730,40 +2734,6 @@
             ctx.fillStyle = 'rgba(0,255,204,0.5)'; ctx.fillRect(400-2, 240-2, 4, 4);
         }
 
-        function loop() {
-            if(!isPlaying) return;
-            if(player.hp <= 0 && player.alive) { player.alive = false; document.getElementById('ui-overlay').innerHTML = '<h1 style="color:#f00; text-align:center; font-size:50px; margin-top:200px; text-shadow:2px 2px #000; font-family:sans-serif;">GAME OVER</h1>'; }
-            if(!player.alive) { ctx.fillStyle = 'rgba(255,0,0,0.2)'; ctx.fillRect(0,0,800,480); return; }
-
-            triggerEvent(getPlayerEntData(), 'update');
-            activeEntities.forEach(ent => {
-                if(!ent.dead) {
-                    triggerEvent(ent, 'update');
-                    let dist = Math.sqrt(Math.pow(ent.tx - player.x, 2) + Math.pow(ent.ty - player.y, 2));
-                    if(dist < 0.6) triggerEvent(ent, 'collide');
-                }
-            });
-            activeEntities = activeEntities.filter(ent => !ent.dead);
-
-            // Giro alternativo continuo por teclado en juego compilado
-            if(keys['arrowleft'] || keys['q']) { player.angle -= 0.045; }
-            if(keys['arrowright'] || keys['e']) { player.angle += 0.045; }
-
-            let dx = Math.cos(player.angle)*player.speed; let dy = Math.sin(player.angle)*player.speed;
-            let sx = Math.cos(player.angle - Math.PI/2)*player.speed; let sy = Math.sin(player.angle - Math.PI/2)*player.speed;
-            
-            if(keys['w']) { if(getObjAt(player.x+dx, player.y).physics !== 'solid') player.x += dx; if(getObjAt(player.x, player.y+dy).physics !== 'solid') player.y += dy; }
-            if(keys['s']) { if(getObjAt(player.x-dx, player.y).physics !== 'solid') player.x -= dx; if(getObjAt(player.x, player.y-dy).physics !== 'solid') player.y -= dy; }
-            if(keys['a']) { if(getObjAt(player.x+sx, player.y).physics !== 'solid') player.x += sx; if(getObjAt(player.x, player.y+sy).physics !== 'solid') player.y += sy; }
-            if(keys['d']) { if(getObjAt(player.x-sx, player.y).physics !== 'solid') player.x -= sx; if(getObjAt(player.x, player.y-sy).physics !== 'solid') player.y -= sy; }
-
-            ctx.fillStyle = '#0a0a0a'; ctx.fillRect(0,0,800,480);
-            render3D();
-            refreshRuntimeUI();
-
-            gameLoop = requestAnimationFrame(loop);
-        }
-
         async function init() { 
             let splash = document.getElementById('splash');
             if (splash) {
@@ -2785,13 +2755,13 @@
             activeEntities.forEach(ent => triggerEvent(ent, 'start'));
             loop();
         }
-        
+
         init();
     <\/script>
 </body>
 </html>`;
 
-            // SOLUCIÓN DEFINITIVA: Reemplazo SEGURO utilizando Funciones Anónimas para evitar colisiones regex
+            // SOLUCIÓN DEFINITIVA: Reemplazo SEGURO utilizando Funciones Anónimas
             let exportResult = templateHTML
                 .replace("GAMET_GAME_TITLE", () => pName || "Juego Exportado")
                 .replace("GAMET_PROJECT_DATA", () => pjString);
